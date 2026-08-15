@@ -1,13 +1,4 @@
 {
-  "indexes": [
-    {
-      "collectionGroup": "posts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "neighborhood", "order": "ASCENDING" },
-        { "fieldPath": "takenAt", "order": "DESCENDING" }
-      ]
-    }
-  ],
+  "indexes": [],
   "fieldOverrides": []
 }

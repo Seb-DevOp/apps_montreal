@@ -1,10 +1,14 @@
 /**
- * Authentification et rôles.
+ * Authentification — application mono-utilisateur.
  *
- * Le rôle est lu dans les *custom claims* du jeton, pas dans un document
- * Firestore : c'est la même source que celle utilisée par les règles de
- * sécurité, donc l'UI et le serveur ne peuvent pas diverger. Un invité qui
- * bidouillerait son profil ne gagnerait rien.
+ * Il n'y a plus ni rôles ni invités : une seule adresse e-mail a le droit
+ * d'entrer. Le contexte expose `authorized`, qui distingue « connecté » de
+ * « autorisé » — un tiers peut parfaitement s'authentifier auprès de Google,
+ * il n'obtiendra simplement rien.
+ *
+ * Cette vérification côté client n'est qu'un confort d'affichage : la garde
+ * réelle est dans firestore.rules, qui n'accorde l'accès qu'à cette même
+ * adresse, vérifiée. Sans cela, un client modifié suffirait à tout lire.
  */
 import {
   createContext,
@@ -17,82 +21,45 @@ import {
 } from 'react';
 import {
   GoogleAuthProvider,
-  createUserWithEmailAndPassword,
   getRedirectResult,
-  onIdTokenChanged,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
+  onAuthStateChanged,
   signInWithPopup,
   signInWithRedirect,
   signOut,
-  updateProfile,
   type User,
 } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
-
-export type Role = 'admin' | 'guest' | 'blocked';
+import { auth } from '../lib/firebase';
+import { getConfig } from '../lib/runtimeConfig';
 
 interface AuthState {
   user: User | null;
-  role: Role;
-  isAdmin: boolean;
+  /** Connecté ET reconnu comme propriétaire. */
+  authorized: boolean;
   loading: boolean;
   error: string | null;
 }
 
 interface AuthContextValue extends AuthState {
   signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  registerWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
-  /** Force le rafraîchissement du jeton (après un changement de rôle). */
-  refreshRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/** Traduit les codes d'erreur Firebase en messages lisibles. */
 function humanizeAuthError(error: unknown): string {
   const code = (error as { code?: string })?.code ?? '';
   const messages: Record<string, string> = {
-    'auth/invalid-email': 'Adresse e-mail invalide.',
-    'auth/user-disabled': 'Ce compte a été désactivé.',
-    'auth/user-not-found': 'Aucun compte avec cette adresse.',
-    'auth/wrong-password': 'Mot de passe incorrect.',
-    'auth/invalid-credential': 'Identifiants incorrects.',
-    'auth/email-already-in-use': 'Cette adresse est déjà utilisée.',
-    'auth/weak-password': 'Mot de passe trop court (6 caractères minimum).',
     'auth/popup-closed-by-user': 'Fenêtre de connexion fermée.',
     'auth/network-request-failed': 'Pas de connexion. Réessaie une fois en ligne.',
     'auth/too-many-requests': 'Trop de tentatives. Patiente quelques minutes.',
   };
-  return messages[code] ?? "Connexion impossible. Réessaie dans un instant.";
-}
-
-/** Crée ou met à jour le profil public, utilisé pour afficher les auteurs. */
-async function syncProfile(user: User): Promise<void> {
-  await setDoc(
-    doc(db(), 'users', user.uid),
-    {
-      displayName: user.displayName ?? user.email?.split('@')[0] ?? 'Voyageur',
-      photoURL: user.photoURL ?? null,
-      email: user.email ?? null,
-      updatedAt: serverTimestamp(),
-      createdAt: serverTimestamp(),
-    },
-    { merge: true },
-  ).catch(() => {
-    // Hors-ligne : Firestore rejouera l'écriture à la reconnexion.
-  });
+  return messages[code] ?? 'Connexion impossible. Réessaie dans un instant.';
 }
 
 export function AuthProvider({ children }: { children: ReactNode }): JSX.Element {
   const [state, setState] = useState<AuthState>({
     user: null,
-    role: 'guest',
-    isAdmin: false,
+    authorized: false,
     loading: true,
     error: null,
   });
@@ -101,101 +68,55 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     // Récupère le résultat d'un signInWithRedirect (chemin iOS standalone).
     void getRedirectResult(auth()).catch(() => undefined);
 
-    // onIdTokenChanged plutôt que onAuthStateChanged : on est aussi notifié
-    // des rafraîchissements de jeton, donc d'un changement de rôle.
-    return onIdTokenChanged(auth(), async (user) => {
+    return onAuthStateChanged(auth(), (user) => {
       if (!user) {
-        setState({ user: null, role: 'guest', isAdmin: false, loading: false, error: null });
+        setState({ user: null, authorized: false, loading: false, error: null });
         return;
       }
-      const token = await user.getIdTokenResult();
-      const claim = token.claims.role;
-      const role: Role = claim === 'admin' || claim === 'blocked' ? claim : 'guest';
 
-      setState({ user, role, isAdmin: role === 'admin', loading: false, error: null });
-      void syncProfile(user);
+      const owner = getConfig().ownerEmail.trim().toLowerCase();
+      const email = (user.email ?? '').trim().toLowerCase();
+      const authorized = owner.length > 0 && email === owner && user.emailVerified;
+
+      setState({
+        user,
+        authorized,
+        loading: false,
+        error: authorized ? null : 'Ce compte n’a pas accès à cette application.',
+      });
     });
-  }, []);
-
-  const run = useCallback(async (action: () => Promise<unknown>) => {
-    setState((s) => ({ ...s, error: null }));
-    try {
-      await action();
-    } catch (error) {
-      setState((s) => ({ ...s, error: humanizeAuthError(error), loading: false }));
-      throw error;
-    }
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    await run(async () => {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      try {
-        await signInWithPopup(auth(), provider);
-      } catch (error) {
-        const code = (error as { code?: string }).code;
-        // En mode standalone (icône sur l'écran d'accueil), iOS bloque les
-        // popups : on bascule sur la redirection, qui revient dans la PWA.
-        if (
-          code === 'auth/popup-blocked' ||
-          code === 'auth/operation-not-supported-in-this-environment' ||
-          code === 'auth/cancelled-popup-request'
-        ) {
-          await signInWithRedirect(auth(), provider);
-          return;
-        }
-        throw error;
+    setState((s) => ({ ...s, error: null }));
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    try {
+      await signInWithPopup(auth(), provider);
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      // En mode standalone (icône sur l'écran d'accueil), iOS bloque les
+      // popups : on bascule sur la redirection, qui revient dans la PWA.
+      if (
+        code === 'auth/popup-blocked' ||
+        code === 'auth/operation-not-supported-in-this-environment' ||
+        code === 'auth/cancelled-popup-request'
+      ) {
+        await signInWithRedirect(auth(), provider);
+        return;
       }
-    });
-  }, [run]);
-
-  const signInWithEmail = useCallback(
-    async (email: string, password: string) => {
-      await run(() => signInWithEmailAndPassword(auth(), email.trim(), password));
-    },
-    [run],
-  );
-
-  const registerWithEmail = useCallback(
-    async (email: string, password: string, displayName: string) => {
-      await run(async () => {
-        const credential = await createUserWithEmailAndPassword(auth(), email.trim(), password);
-        await updateProfile(credential.user, { displayName: displayName.trim() || 'Voyageur' });
-        await syncProfile(credential.user);
-      });
-    },
-    [run],
-  );
-
-  const resetPassword = useCallback(
-    async (email: string) => {
-      await run(() => sendPasswordResetEmail(auth(), email.trim()));
-    },
-    [run],
-  );
+      setState((s) => ({ ...s, error: humanizeAuthError(error) }));
+    }
+  }, []);
 
   const logout = useCallback(async () => {
     await signOut(auth());
   }, []);
 
-  const refreshRole = useCallback(async () => {
-    const user = auth().currentUser;
-    if (!user) return;
-    await user.getIdToken(true);
-  }, []);
-
   const value = useMemo<AuthContextValue>(
-    () => ({
-      ...state,
-      signInWithGoogle,
-      signInWithEmail,
-      registerWithEmail,
-      resetPassword,
-      logout,
-      refreshRole,
-    }),
-    [state, signInWithGoogle, signInWithEmail, registerWithEmail, resetPassword, logout, refreshRole],
+    () => ({ ...state, signInWithGoogle, logout }),
+    [state, signInWithGoogle, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -18,6 +18,7 @@ const CATEGORY_LABEL: Record<LexiconEntry['category'], string> = {
   quotidien: 'Quotidien',
   juron: 'Sacres',
   anglicisme: 'Anglicismes',
+  travail: 'Travail',
 };
 
 /** Normalise pour la recherche : minuscules, sans accents, sans ligatures. */

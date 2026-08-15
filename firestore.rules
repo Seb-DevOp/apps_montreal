@@ -3,160 +3,41 @@ rules_version = '2';
 // =============================================================================
 // Montréal Compagnon — règles Firestore
 //
-// Modèle de rôles :
-//   - admin  : le voyageur (moi). Custom claim { role: "admin" } posé par
-//              scripts/set-admin.mjs. Écriture sur tout le contenu.
-//   - guest  : proches connectés. Lecture du contenu + likes + commentaires.
-//   - anon   : rien.
+// APPLICATION MONO-UTILISATEUR.
 //
-// Le rôle est lu dans le TOKEN (custom claim) et non dans un document, pour
-// éviter une lecture Firestore par requête (quota Free Tier) et pour empêcher
-// toute escalade de privilège via l'écriture du profil.
+// Il n'y a plus ni rôles, ni invités, ni partage : un seul compte accède à
+// l'intégralité des données. Tout le reste est refusé, y compris en lecture.
+//
+// Le propriétaire est identifié par son ADRESSE E-MAIL vérifiée, et non par
+// son UID. C'est délibéré : les UID Firebase sont propres à un projet et
+// changeraient à chaque migration trimestrielle, ce qui casserait ces règles.
+// L'adresse, elle, reste la même.
+//
+// `email_verified` est exigé : sans lui, un fournisseur d'identité laxiste
+// pourrait présenter un jeton portant une adresse non prouvée.
 // =============================================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ----------------------------- Helpers ---------------------------------
-    function isSignedIn() {
-      return request.auth != null;
+    function ownerEmail() {
+      return 'sebwow73@gmail.com';
     }
 
-    function role() {
-      return isSignedIn() ? (request.auth.token.role is string ? request.auth.token.role : 'guest') : 'anon';
+    // `token.get(clé, défaut)` est obligatoire : lire `token.email`
+    // directement lève « Property email is undefined on object » si la
+    // revendication est absente, ce qui refuserait tout accès sans expliquer
+    // pourquoi.
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.get('email', '') == ownerEmail()
+        && request.auth.token.get('email_verified', false) == true;
     }
 
-    function isAdmin() {
-      return role() == 'admin';
-    }
-
-    // Invité « approuvé » : tout compte authentifié dont le rôle n'a pas été
-    // révoqué. La révocation se fait en posant role = "blocked".
-    function isGuest() {
-      return isSignedIn() && role() != 'blocked';
-    }
-
-    function isOwner(uid) {
-      return isSignedIn() && request.auth.uid == uid;
-    }
-
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
-
-    function isTimestampNow(field) {
-      return incoming()[field] == request.time;
-    }
-
-    // ------------------------------ users ----------------------------------
-    // Profil public minimal (nom + avatar) pour afficher les auteurs de
-    // commentaires. Le champ `role` est en lecture seule côté client : il est
-    // écrit uniquement par l'Admin SDK (Cloud Run / script d'admin).
-    match /users/{uid} {
-      allow read: if isGuest();
-
-      allow create: if isOwner(uid)
-        && incoming().keys().hasOnly(['displayName', 'photoURL', 'email', 'createdAt', 'updatedAt'])
-        && incoming().displayName is string
-        && incoming().displayName.size() <= 60;
-
-      allow update: if (isOwner(uid) && !incoming().diff(existing()).affectedKeys()
-                          .hasAny(['role', 'email', 'createdAt'].toSet()))
-                    || isAdmin();
-
-      allow delete: if isAdmin();
-    }
-
-    // ------------------------------ trip -----------------------------------
-    // Document unique de configuration du voyage (dates, fuseau, libellés).
-    match /trips/{tripId} {
-      allow read: if isGuest();
-      allow write: if isAdmin();
-    }
-
-    // ------------------------------ posts ----------------------------------
-    // Journal d'aventures : photos géolocalisées.
-    match /posts/{postId} {
-      allow read: if isGuest();
-
-      allow create: if isAdmin()
-        && incoming().authorUid == request.auth.uid
-        && incoming().caption is string
-        && incoming().caption.size() <= 2000
-        && incoming().storagePath is string
-        && incoming().storagePath.matches('^photos/.*')
-        && isTimestampNow('createdAt');
-
-      // L'admin édite légende / lieu / tags, jamais l'auteur ni le chemin
-      // Storage (qui servirait à pointer vers le fichier d'un tiers).
-      allow update: if isAdmin()
-        && !incoming().diff(existing()).affectedKeys()
-              .hasAny(['authorUid', 'createdAt', 'storagePath'].toSet());
-
-      allow delete: if isAdmin();
-
-      // -- likes : un document par utilisateur, id = uid --------------------
-      match /likes/{uid} {
-        allow read: if isGuest();
-        allow create: if isOwner(uid) && isGuest()
-          && incoming().keys().hasOnly(['uid', 'createdAt'])
-          && incoming().uid == uid;
-        allow delete: if isOwner(uid) || isAdmin();
-        allow update: if false;
-      }
-
-      // -- commentaires ------------------------------------------------------
-      match /comments/{commentId} {
-        allow read: if isGuest();
-
-        allow create: if isGuest()
-          && incoming().authorUid == request.auth.uid
-          && incoming().text is string
-          && incoming().text.size() > 0
-          && incoming().text.size() <= 500
-          && isTimestampNow('createdAt');
-
-        // Un auteur peut corriger son texte pendant la vie du commentaire ;
-        // l'admin peut modérer (supprimer).
-        allow update: if isOwner(existing().authorUid)
-          && incoming().diff(existing()).affectedKeys().hasOnly(['text', 'editedAt'].toSet())
-          && incoming().text.size() <= 500;
-
-        allow delete: if isOwner(existing().authorUid) || isAdmin();
-      }
-    }
-
-    // ------------------------------ tasks ----------------------------------
-    // Check & Sync pré-départ (import Google Keep + timeline J-30…J-0).
-    match /tasks/{taskId} {
-      allow read: if isGuest();
-      allow write: if isAdmin();
-    }
-
-    // ------------------------------ spots ----------------------------------
-    // Micro-spots & itinéraires par quartier.
-    match /spots/{spotId} {
-      allow read: if isGuest();
-      allow write: if isAdmin();
-    }
-
-    // ----------------------------- lexicon ---------------------------------
-    // Décodeur d'argot québécois : lecture ouverte aux invités, seed par admin.
-    match /lexicon/{termId} {
-      allow read: if isGuest();
-      allow write: if isAdmin();
-    }
-
-    // ------------------------------ meta -----------------------------------
-    // Caches serveur (météo) : écrits par Cloud Run via l'Admin SDK, qui
-    // contourne ces règles. Le client ne fait que lire.
-    match /meta/{docId} {
-      allow read: if isGuest();
-      allow write: if false;
-    }
-
-    // Tout le reste est refusé.
+    // Une seule règle, appliquée à tout : profil, voyage, tâches, spots,
+    // lexique, candidatures, caches. Aucune exception à maintenir.
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isOwner();
     }
   }
 }

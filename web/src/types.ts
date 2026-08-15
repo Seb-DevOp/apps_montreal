@@ -1,43 +1,6 @@
 /** Types partagés des documents Firestore. */
 import type { Timestamp } from 'firebase/firestore';
 
-export interface GeoPoint {
-  lat: number;
-  lng: number;
-  /** Libellé lisible, ex. « Mile End, Montréal ». */
-  label?: string;
-  /** Quartier déduit localement (voir data/neighborhoods.ts). */
-  neighborhood?: string;
-}
-
-export interface Post {
-  id: string;
-  authorUid: string;
-  authorName: string;
-  caption: string;
-  storagePath: string;
-  thumbPath: string;
-  url: string;
-  thumbUrl: string;
-  width: number;
-  height: number;
-  location: GeoPoint | null;
-  neighborhood: string | null;
-  takenAt: Timestamp;
-  createdAt: Timestamp;
-  tags: string[];
-}
-
-export interface Comment {
-  id: string;
-  authorUid: string;
-  authorName: string;
-  authorPhoto: string | null;
-  text: string;
-  createdAt: Timestamp;
-  editedAt?: Timestamp;
-}
-
 export interface Task {
   id: string;
   title: string;
@@ -67,12 +30,63 @@ export interface Spot {
   weatherTags: string[];
 }
 
+/** Étapes du suivi de candidature, dans l'ordre du pipeline. */
+export type ApplicationStatus =
+  | 'reperee'
+  | 'postulee'
+  | 'relance'
+  | 'entretien'
+  | 'offre'
+  | 'refus'
+  | 'abandon';
+
+export interface InterviewQuestion {
+  question: string;
+  /** Réponse préparée. Vide tant qu'elle n'est pas travaillée. */
+  answer: string;
+}
+
+export interface JobApplication {
+  id: string;
+  company: string;
+  role: string;
+  location: string;
+  /** LinkedIn, Indeed, cooptation, candidature spontanée… */
+  source: string;
+  url: string;
+  status: ApplicationStatus;
+  /** Date de candidature, AAAA-MM-JJ. */
+  appliedAt: string;
+  /** Prochaine échéance (relance, entretien), AAAA-MM-JJ. */
+  nextActionAt: string | null;
+  nextAction: string;
+  salaryRange: string;
+  contactName: string;
+  contactEmail: string;
+  notes: string;
+  /** Préparation d'entretien, propre à cette candidature. */
+  questions: InterviewQuestion[];
+  /** Questions à poser au recruteur. */
+  toAsk: string[];
+  /** Liens utiles : offre archivée, CV envoyé, portfolio. */
+  links: { label: string; url: string }[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 export interface LexiconEntry {
   id: string;
   term: string;
   definition: string;
   example: string;
-  category: 'expression' | 'nourriture' | 'transport' | 'quotidien' | 'juron' | 'anglicisme';
+  category:
+    | 'expression'
+    | 'nourriture'
+    | 'transport'
+    | 'quotidien'
+    | 'juron'
+    | 'anglicisme'
+    | 'travail';
   /** Équivalent en français de France, quand il existe. */
   frenchEquivalent?: string;
 }

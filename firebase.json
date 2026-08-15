@@ -1,9 +1,10 @@
 {
   "hosting": {
     "public": "web/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": ["firebase.json", "**/.*", "!**/.well-known/**", "**/node_modules/**"],
     "cleanUrls": true,
     "trailingSlash": false,
+    "appAssociation": "NONE",
     "rewrites": [
       {
         "source": "/api/**",

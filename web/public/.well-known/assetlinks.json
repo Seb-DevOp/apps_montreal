@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.web.appsmontreal.twa",
+      "sha256_cert_fingerprints": [
+        "E0:08:5A:71:FA:2C:01:A7:23:44:BD:D3:42:37:A9:90:D4:18:13:89:6E:B8:73:17:28:6D:A2:57:5C:20:64:64"
+      ]
+    }
+  }
+]

@@ -5,13 +5,22 @@
     "neighborhood": "Mile End",
     "category": "boulangerie",
     "address": "263 Rue Saint-Viateur O",
-    "geo": { "lat": 45.5232, "lng": -73.6027 },
-    "metro": ["Bleue"],
+    "geo": {
+      "lat": 45.5232,
+      "lng": -73.6027
+    },
+    "metro": [
+      "Bleue"
+    ],
     "notes": "Ouvert 24 h/24, four à bois. Sésame chaud sorti du four à 2 h du matin : l'expérience montréalaise par excellence.",
     "url": "https://stviateurbagel.com",
     "priority": 9,
     "indoor": true,
-    "weatherTags": ["froid", "grand-froid", "pluie"]
+    "weatherTags": [
+      "froid",
+      "grand-froid",
+      "pluie"
+    ]
   },
   {
     "id": "fairmount-bagel",
@@ -19,13 +28,21 @@
     "neighborhood": "Mile End",
     "category": "boulangerie",
     "address": "74 Av. Fairmount O",
-    "geo": { "lat": 45.5222, "lng": -73.5993 },
-    "metro": ["Bleue"],
+    "geo": {
+      "lat": 45.5222,
+      "lng": -73.5993
+    },
+    "metro": [
+      "Bleue"
+    ],
     "notes": "L'autre camp de la guerre des bagels. Goûte les deux le même matin, tranche toi-même.",
     "url": null,
     "priority": 8,
     "indoor": true,
-    "weatherTags": ["froid", "pluie"]
+    "weatherTags": [
+      "froid",
+      "pluie"
+    ]
   },
   {
     "id": "schwartz",
@@ -33,13 +50,22 @@
     "neighborhood": "Plateau-Mont-Royal",
     "category": "restaurant",
     "address": "3895 Bd Saint-Laurent",
-    "geo": { "lat": 45.5162, "lng": -73.5773 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5162,
+      "lng": -73.5773
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Smoked meat depuis 1928. File d'attente dehors : prends le comptoir à emporter à côté si le vent mord.",
     "url": null,
     "priority": 9,
     "indoor": true,
-    "weatherTags": ["froid", "pluie", "neige"]
+    "weatherTags": [
+      "froid",
+      "pluie",
+      "neige"
+    ]
   },
   {
     "id": "marche-jean-talon",
@@ -47,13 +73,22 @@
     "neighborhood": "Petite-Italie / Marché Jean-Talon",
     "category": "marché",
     "address": "7070 Av. Henri-Julien",
-    "geo": { "lat": 45.5366, "lng": -73.6146 },
-    "metro": ["Bleue"],
+    "geo": {
+      "lat": 45.5366,
+      "lng": -73.6146
+    },
+    "metro": [
+      "Bleue"
+    ],
     "notes": "Partiellement couvert et chauffé l'hiver. Sirop d'érable, fromages québécois, cidre de glace.",
     "url": "https://www.marchespublics-mtl.com",
     "priority": 10,
     "indoor": true,
-    "weatherTags": ["canicule", "froid", "pluie"]
+    "weatherTags": [
+      "canicule",
+      "froid",
+      "pluie"
+    ]
   },
   {
     "id": "marche-atwater",
@@ -61,13 +96,21 @@
     "neighborhood": "Griffintown / Canal Lachine",
     "category": "marché",
     "address": "138 Av. Atwater",
-    "geo": { "lat": 45.4795, "lng": -73.5786 },
-    "metro": ["Verte"],
+    "geo": {
+      "lat": 45.4795,
+      "lng": -73.5786
+    },
+    "metro": [
+      "Verte"
+    ],
     "notes": "Plus petit que Jean-Talon mais au bord du canal Lachine : marché puis balade sur la piste cyclable.",
     "url": null,
     "priority": 7,
     "indoor": true,
-    "weatherTags": ["pluie", "froid"]
+    "weatherTags": [
+      "pluie",
+      "froid"
+    ]
   },
   {
     "id": "reso",
@@ -75,13 +118,25 @@
     "neighborhood": "Centre-ville",
     "category": "réseau",
     "address": "Accès depuis McGill, Peel, Bonaventure",
-    "geo": { "lat": 45.5017, "lng": -73.5701 },
-    "metro": ["Verte", "Orange"],
+    "geo": {
+      "lat": 45.5017,
+      "lng": -73.5701
+    },
+    "metro": [
+      "Verte",
+      "Orange"
+    ],
     "notes": "33 km de galeries reliant métro, centres commerciaux et gares. Le refuge absolu par -25 °C comme par 35 °C d'humidex.",
     "url": null,
     "priority": 10,
     "indoor": true,
-    "weatherTags": ["grand-froid", "froid", "canicule", "pluie", "neige"]
+    "weatherTags": [
+      "grand-froid",
+      "froid",
+      "canicule",
+      "pluie",
+      "neige"
+    ]
   },
   {
     "id": "mbam",
@@ -89,13 +144,22 @@
     "neighborhood": "Centre-ville",
     "category": "musée",
     "address": "1380 Rue Sherbrooke O",
-    "geo": { "lat": 45.4986, "lng": -73.5794 },
-    "metro": ["Verte"],
+    "geo": {
+      "lat": 45.4986,
+      "lng": -73.5794
+    },
+    "metro": [
+      "Verte"
+    ],
     "notes": "Cinq pavillons reliés par un tunnel souterrain. Gratuit pour les moins de 21 ans, collection permanente à prix réduit le mercredi soir.",
     "url": "https://www.mbam.qc.ca",
     "priority": 8,
     "indoor": true,
-    "weatherTags": ["pluie", "grand-froid", "canicule"]
+    "weatherTags": [
+      "pluie",
+      "grand-froid",
+      "canicule"
+    ]
   },
   {
     "id": "pointe-a-calliere",
@@ -103,13 +167,22 @@
     "neighborhood": "Vieux-Port / Vieux-Montréal",
     "category": "musée",
     "address": "350 Place Royale",
-    "geo": { "lat": 45.5024, "lng": -73.5541 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5024,
+      "lng": -73.5541
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Musée d'archéologie construit sur le lieu de fondation de Montréal. On marche littéralement dans les fondations de 1642.",
     "url": "https://pacmusee.qc.ca",
     "priority": 8,
     "indoor": true,
-    "weatherTags": ["pluie", "froid", "grand-froid"]
+    "weatherTags": [
+      "pluie",
+      "froid",
+      "grand-froid"
+    ]
   },
   {
     "id": "biodome",
@@ -117,13 +190,22 @@
     "neighborhood": "Hochelaga-Maisonneuve",
     "category": "musée",
     "address": "4777 Av. Pierre-De Coubertin",
-    "geo": { "lat": 45.5596, "lng": -73.5497 },
-    "metro": ["Verte"],
+    "geo": {
+      "lat": 45.5596,
+      "lng": -73.5497
+    },
+    "metro": [
+      "Verte"
+    ],
     "notes": "Cinq écosystèmes des Amériques sous un toit. Le passage dans la forêt tropicale par -20 °C dehors vaut le détour à lui seul.",
     "url": "https://espacepourlavie.ca",
     "priority": 7,
     "indoor": true,
-    "weatherTags": ["grand-froid", "froid", "pluie"]
+    "weatherTags": [
+      "grand-froid",
+      "froid",
+      "pluie"
+    ]
   },
   {
     "id": "jardin-botanique",
@@ -131,13 +213,21 @@
     "neighborhood": "Hochelaga-Maisonneuve",
     "category": "parc",
     "address": "4101 Rue Sherbrooke E",
-    "geo": { "lat": 45.5599, "lng": -73.5624 },
-    "metro": ["Verte"],
+    "geo": {
+      "lat": 45.5599,
+      "lng": -73.5624
+    },
+    "metro": [
+      "Verte"
+    ],
     "notes": "Jardins de Chine et du Japon. Les serres restent ouvertes l'hiver — repli parfait si le ciel tourne.",
     "url": "https://espacepourlavie.ca",
     "priority": 8,
     "indoor": false,
-    "weatherTags": ["doux", "chaud"]
+    "weatherTags": [
+      "doux",
+      "chaud"
+    ]
   },
   {
     "id": "mont-royal-belvedere",
@@ -145,13 +235,22 @@
     "neighborhood": "Mont-Royal",
     "category": "point de vue",
     "address": "Chemin Olmsted, parc du Mont-Royal",
-    "geo": { "lat": 45.5039, "lng": -73.5873 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5039,
+      "lng": -73.5873
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "La vue carte postale sur le centre-ville et le fleuve. Montée en 30 min depuis Peel, ou bus 11 pour éviter les escaliers.",
     "url": null,
     "priority": 10,
     "indoor": false,
-    "weatherTags": ["doux", "frais", "chaud"]
+    "weatherTags": [
+      "doux",
+      "frais",
+      "chaud"
+    ]
   },
   {
     "id": "lac-aux-castors",
@@ -159,13 +258,22 @@
     "neighborhood": "Mont-Royal",
     "category": "parc",
     "address": "2000 Chemin Remembrance",
-    "geo": { "lat": 45.4977, "lng": -73.5978 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.4977,
+      "lng": -73.5978
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Patin à glace l'hiver, pique-nique l'été. Pavillon chauffé avec café sur place.",
     "url": null,
     "priority": 6,
     "indoor": false,
-    "weatherTags": ["doux", "frais", "froid"]
+    "weatherTags": [
+      "doux",
+      "frais",
+      "froid"
+    ]
   },
   {
     "id": "vieux-port-quais",
@@ -173,13 +281,21 @@
     "neighborhood": "Vieux-Port / Vieux-Montréal",
     "category": "promenade",
     "address": "Quai Jacques-Cartier",
-    "geo": { "lat": 45.5088, "lng": -73.5478 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5088,
+      "lng": -73.5478
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Grande roue, tyrolienne, plage urbaine l'été et patinoire réfrigérée l'hiver.",
     "url": null,
     "priority": 8,
     "indoor": false,
-    "weatherTags": ["doux", "chaud"]
+    "weatherTags": [
+      "doux",
+      "chaud"
+    ]
   },
   {
     "id": "basilique-notre-dame",
@@ -187,13 +303,23 @@
     "neighborhood": "Vieux-Port / Vieux-Montréal",
     "category": "monument",
     "address": "110 Rue Notre-Dame O",
-    "geo": { "lat": 45.5045, "lng": -73.5563 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5045,
+      "lng": -73.5563
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Intérieur bleu nuit constellé d'or. Spectacle AURA en soirée, billets à réserver en ligne.",
     "url": "https://www.basiliquenotredame.ca",
     "priority": 9,
     "indoor": true,
-    "weatherTags": ["pluie", "froid", "grand-froid", "canicule"]
+    "weatherTags": [
+      "pluie",
+      "froid",
+      "grand-froid",
+      "canicule"
+    ]
   },
   {
     "id": "canal-lachine",
@@ -201,13 +327,23 @@
     "neighborhood": "Griffintown / Canal Lachine",
     "category": "vélo",
     "address": "Depuis le Vieux-Port jusqu'au lac Saint-Louis",
-    "geo": { "lat": 45.4833, "lng": -73.5828 },
-    "metro": ["Orange", "Verte"],
+    "geo": {
+      "lat": 45.4833,
+      "lng": -73.5828
+    },
+    "metro": [
+      "Orange",
+      "Verte"
+    ],
     "notes": "14 km plats le long de l'eau. Vélos BIXI en libre-service aux deux extrémités.",
     "url": null,
     "priority": 8,
     "indoor": false,
-    "weatherTags": ["doux", "chaud", "frais"]
+    "weatherTags": [
+      "doux",
+      "chaud",
+      "frais"
+    ]
   },
   {
     "id": "rue-saint-denis",
@@ -215,13 +351,21 @@
     "neighborhood": "Plateau-Mont-Royal",
     "category": "promenade",
     "address": "Entre Sherbrooke et Mont-Royal",
-    "geo": { "lat": 45.5203, "lng": -73.5719 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5203,
+      "lng": -73.5719
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Terrasses, friperies, librairies. Les escaliers extérieurs en colimaçon des rues adjacentes sont l'emblème du quartier.",
     "url": null,
     "priority": 7,
     "indoor": false,
-    "weatherTags": ["doux", "chaud"]
+    "weatherTags": [
+      "doux",
+      "chaud"
+    ]
   },
   {
     "id": "murales-saint-laurent",
@@ -229,13 +373,22 @@
     "neighborhood": "Plateau-Mont-Royal",
     "category": "street art",
     "address": "Bd Saint-Laurent, entre Sherbrooke et Van Horne",
-    "geo": { "lat": 45.5195, "lng": -73.5827 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5195,
+      "lng": -73.5827
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Fresques du festival MURAL, renouvelées chaque juin. Le portrait de Leonard Cohen domine le centre-ville depuis Crescent.",
     "url": null,
     "priority": 7,
     "indoor": false,
-    "weatherTags": ["doux", "frais", "chaud"]
+    "weatherTags": [
+      "doux",
+      "frais",
+      "chaud"
+    ]
   },
   {
     "id": "dieu-du-ciel",
@@ -243,13 +396,22 @@
     "neighborhood": "Mile End",
     "category": "bar",
     "address": "29 Av. Laurier O",
-    "geo": { "lat": 45.5233, "lng": -73.5936 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5233,
+      "lng": -73.5936
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Brasserie artisanale culte. Petite salle, arrive tôt. La Péché Mortel (stout au café) est une institution.",
     "url": null,
     "priority": 7,
     "indoor": true,
-    "weatherTags": ["froid", "pluie", "grand-froid"]
+    "weatherTags": [
+      "froid",
+      "pluie",
+      "grand-froid"
+    ]
   },
   {
     "id": "la-banquise",
@@ -257,13 +419,23 @@
     "neighborhood": "Plateau-Mont-Royal",
     "category": "restaurant",
     "address": "994 Rue Rachel E",
-    "geo": { "lat": 45.5266, "lng": -73.5771 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5266,
+      "lng": -73.5771
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Ouvert 24 h/24, une trentaine de poutines. La classique reste la meilleure porte d'entrée.",
     "url": null,
     "priority": 8,
     "indoor": true,
-    "weatherTags": ["froid", "grand-froid", "pluie", "neige"]
+    "weatherTags": [
+      "froid",
+      "grand-froid",
+      "pluie",
+      "neige"
+    ]
   },
   {
     "id": "parc-la-fontaine",
@@ -271,13 +443,22 @@
     "neighborhood": "Plateau-Mont-Royal",
     "category": "parc",
     "address": "3819 Av. Calixa-Lavallée",
-    "geo": { "lat": 45.5262, "lng": -73.5697 },
-    "metro": ["Orange"],
+    "geo": {
+      "lat": 45.5262,
+      "lng": -73.5697
+    },
+    "metro": [
+      "Orange"
+    ],
     "notes": "Étangs, terrasse du parc, patinoire l'hiver. Le poumon du Plateau.",
     "url": null,
     "priority": 6,
     "indoor": false,
-    "weatherTags": ["doux", "chaud", "frais"]
+    "weatherTags": [
+      "doux",
+      "chaud",
+      "frais"
+    ]
   },
   {
     "id": "grande-bibliotheque",
@@ -285,13 +466,25 @@
     "neighborhood": "Quartier latin / Village",
     "category": "culture",
     "address": "475 Bd De Maisonneuve E",
-    "geo": { "lat": 45.5152, "lng": -73.5614 },
-    "metro": ["Verte", "Orange", "Jaune"],
+    "geo": {
+      "lat": 45.5152,
+      "lng": -73.5614
+    },
+    "metro": [
+      "Verte",
+      "Orange",
+      "Jaune"
+    ],
     "notes": "Gratuite, immense, connectée directement au métro Berri-UQAM. Refuge silencieux et chauffé, avec vue.",
     "url": "https://www.banq.qc.ca",
     "priority": 6,
     "indoor": true,
-    "weatherTags": ["grand-froid", "froid", "pluie", "canicule"]
+    "weatherTags": [
+      "grand-froid",
+      "froid",
+      "pluie",
+      "canicule"
+    ]
   },
   {
     "id": "centre-eaton",
@@ -299,13 +492,24 @@
     "neighborhood": "Centre-ville",
     "category": "commerce",
     "address": "705 Rue Sainte-Catherine O",
-    "geo": { "lat": 45.5029, "lng": -73.5714 },
-    "metro": ["Verte", "Orange"],
+    "geo": {
+      "lat": 45.5029,
+      "lng": -73.5714
+    },
+    "metro": [
+      "Verte",
+      "Orange"
+    ],
     "notes": "Portes d'entrée principales du RÉSO. On traverse le centre-ville sans jamais sortir.",
     "url": null,
     "priority": 5,
     "indoor": true,
-    "weatherTags": ["grand-froid", "canicule", "pluie", "neige"]
+    "weatherTags": [
+      "grand-froid",
+      "canicule",
+      "pluie",
+      "neige"
+    ]
   },
   {
     "id": "parc-jean-drapeau",
@@ -313,13 +517,21 @@
     "neighborhood": "Vieux-Port / Vieux-Montréal",
     "category": "parc",
     "address": "Île Sainte-Hélène",
-    "geo": { "lat": 45.5123, "lng": -73.5324 },
-    "metro": ["Jaune"],
+    "geo": {
+      "lat": 45.5123,
+      "lng": -73.5324
+    },
+    "metro": [
+      "Jaune"
+    ],
     "notes": "Biosphère de Buckminster Fuller, plage Jean-Doré, vue sur la skyline depuis l'autre rive.",
     "url": null,
     "priority": 7,
     "indoor": false,
-    "weatherTags": ["chaud", "doux"]
+    "weatherTags": [
+      "chaud",
+      "doux"
+    ]
   },
   {
     "id": "yul-747",
@@ -327,10 +539,363 @@
     "neighborhood": "Aéroport Montréal-Trudeau (YUL)",
     "category": "transport",
     "address": "Niveau des arrivées internationales, porte 27",
-    "geo": { "lat": 45.4576, "lng": -73.7497 },
+    "geo": {
+      "lat": 45.4576,
+      "lng": -73.7497
+    },
     "metro": [],
     "notes": "24 h/24, ~11 $ CAD, titre valable 24 h sur tout le réseau STM. Distributeur dans le hall : la monnaie n'est pas rendue à bord.",
     "url": "https://www.stm.info",
+    "priority": 10,
+    "indoor": true,
+    "weatherTags": []
+  },
+  {
+    "id": "crew-collective",
+    "name": "Crew Collective & Café",
+    "neighborhood": "Vieux-Port / Vieux-Montréal",
+    "category": "coworking",
+    "address": "360 Rue Saint-Jacques",
+    "geo": {
+      "lat": 45.5027,
+      "lng": -73.5591
+    },
+    "metro": [
+      "Orange"
+    ],
+    "notes": "Ancienne banque monumentale reconvertie en café-coworking. Wifi solide, prises partout : le meilleur endroit pour un entretien en visio ou une matinée de candidatures.",
+    "url": null,
+    "priority": 9,
+    "indoor": true,
+    "weatherTags": [
+      "pluie",
+      "froid",
+      "grand-froid",
+      "canicule"
+    ]
+  },
+  {
+    "id": "wework-mtl",
+    "name": "Espaces de coworking Sainte-Catherine",
+    "neighborhood": "Centre-ville",
+    "category": "coworking",
+    "address": "Autour de McGill et Peel",
+    "geo": {
+      "lat": 45.5019,
+      "lng": -73.5721
+    },
+    "metro": [
+      "Verte"
+    ],
+    "notes": "Passes journaliers autour de 30 $. Utile pour un entretien au calme avec une bonne connexion.",
+    "url": null,
+    "priority": 6,
+    "indoor": true,
+    "weatherTags": [
+      "pluie",
+      "grand-froid",
+      "canicule"
+    ]
+  },
+  {
+    "id": "bibliotheque-mile-end",
+    "name": "Bibliothèque Mordecai-Richler",
+    "neighborhood": "Mile End",
+    "category": "culture",
+    "address": "5434 Av. du Parc",
+    "geo": {
+      "lat": 45.5225,
+      "lng": -73.6024
+    },
+    "metro": [
+      "Bleue"
+    ],
+    "notes": "Gratuite, silencieuse, wifi. Alternative sans frais au coworking.",
+    "url": null,
+    "priority": 5,
+    "indoor": true,
+    "weatherTags": [
+      "pluie",
+      "froid",
+      "grand-froid",
+      "canicule"
+    ]
+  },
+  {
+    "id": "jean-coutu",
+    "name": "Pharmacies Jean Coutu",
+    "neighborhood": "Centre-ville",
+    "category": "pratique",
+    "address": "Nombreuses succursales",
+    "geo": {
+      "lat": 45.5017,
+      "lng": -73.5673
+    },
+    "metro": [
+      "Verte",
+      "Orange"
+    ],
+    "notes": "Pharmacie mais aussi dépannage courant. Beaucoup ouvrent jusqu'à 22 h.",
+    "url": null,
+    "priority": 7,
+    "indoor": true,
+    "weatherTags": []
+  },
+  {
+    "id": "saq",
+    "name": "SAQ",
+    "neighborhood": "Centre-ville",
+    "category": "pratique",
+    "address": "Monopole d'État",
+    "geo": {
+      "lat": 45.5044,
+      "lng": -73.5719
+    },
+    "metro": [
+      "Verte"
+    ],
+    "notes": "Seul endroit pour acheter vin et spiritueux. Les dépanneurs ne vendent que bière et cidre, et ferment la vente d'alcool à 23 h.",
+    "url": null,
+    "priority": 8,
+    "indoor": true,
+    "weatherTags": []
+  },
+  {
+    "id": "metro-epicerie",
+    "name": "Épiceries Metro / IGA / Provigo",
+    "neighborhood": "Plateau-Mont-Royal",
+    "category": "pratique",
+    "address": "Partout",
+    "geo": {
+      "lat": 45.5225,
+      "lng": -73.5799
+    },
+    "metro": [
+      "Orange"
+    ],
+    "notes": "Les prix affichés excluent les taxes sur les produits non essentiels. Carte de fidélité gratuite en caisse, elle change vraiment les prix.",
+    "url": null,
+    "priority": 7,
+    "indoor": true,
+    "weatherTags": []
+  },
+  {
+    "id": "mont-royal-tam-tams",
+    "name": "Tam-tams du mont Royal",
+    "neighborhood": "Mont-Royal",
+    "category": "événement",
+    "address": "Monument George-Étienne-Cartier",
+    "geo": {
+      "lat": 45.5145,
+      "lng": -73.5854
+    },
+    "metro": [
+      "Orange"
+    ],
+    "notes": "Chaque dimanche de mai à septembre : percussions, danse, marché improvisé. Institution montréalaise, gratuite.",
+    "url": null,
+    "priority": 9,
+    "indoor": false,
+    "weatherTags": [
+      "doux",
+      "chaud"
+    ]
+  },
+  {
+    "id": "plage-verdun",
+    "name": "Plage urbaine de Verdun",
+    "neighborhood": "Verdun / Île-des-Sœurs",
+    "category": "parc",
+    "address": "Boul. LaSalle",
+    "geo": {
+      "lat": 45.4562,
+      "lng": -73.5698
+    },
+    "metro": [
+      "Verte"
+    ],
+    "notes": "Baignade surveillée dans le fleuve, gratuite. Bondée les week-ends de canicule.",
+    "url": null,
+    "priority": 6,
+    "indoor": false,
+    "weatherTags": [
+      "canicule",
+      "chaud"
+    ]
+  },
+  {
+    "id": "oratoire",
+    "name": "Oratoire Saint-Joseph",
+    "neighborhood": "Outremont",
+    "category": "monument",
+    "address": "3800 Ch. Queen Mary",
+    "geo": {
+      "lat": 45.4923,
+      "lng": -73.6178
+    },
+    "metro": [
+      "Bleue"
+    ],
+    "notes": "Plus haut point de l'île. Dôme visible de partout, vue imprenable, entrée libre.",
+    "url": null,
+    "priority": 7,
+    "indoor": true,
+    "weatherTags": [
+      "pluie",
+      "froid",
+      "canicule"
+    ]
+  },
+  {
+    "id": "marche-solidaire",
+    "name": "Marché Maisonneuve",
+    "neighborhood": "Hochelaga-Maisonneuve",
+    "category": "marché",
+    "address": "4445 Rue Ontario E",
+    "geo": {
+      "lat": 45.5493,
+      "lng": -73.5442
+    },
+    "metro": [
+      "Verte"
+    ],
+    "notes": "Plus petit et plus local que Jean-Talon, sans les cars de touristes.",
+    "url": null,
+    "priority": 5,
+    "indoor": true,
+    "weatherTags": [
+      "pluie",
+      "froid"
+    ]
+  },
+  {
+    "id": "boulangerie-guillaume",
+    "name": "Boulangerie Guillaume",
+    "neighborhood": "Mile End",
+    "category": "boulangerie",
+    "address": "5132 Bd Saint-Laurent",
+    "geo": {
+      "lat": 45.5232,
+      "lng": -73.5975
+    },
+    "metro": [
+      "Bleue"
+    ],
+    "notes": "Une des meilleures boulangeries de la ville. File le week-end.",
+    "url": null,
+    "priority": 6,
+    "indoor": true,
+    "weatherTags": [
+      "froid",
+      "pluie"
+    ]
+  },
+  {
+    "id": "st-laurent-nuit",
+    "name": "Boulevard Saint-Laurent la nuit",
+    "neighborhood": "Plateau-Mont-Royal",
+    "category": "bar",
+    "address": "Entre Sherbrooke et Mont-Royal",
+    "geo": {
+      "lat": 45.5165,
+      "lng": -73.5773
+    },
+    "metro": [
+      "Orange"
+    ],
+    "notes": "La « Main ». Bars ouverts jusqu'à 3 h. Dernier métro vers 1 h en semaine : prévoir le retour.",
+    "url": null,
+    "priority": 7,
+    "indoor": true,
+    "weatherTags": [
+      "froid",
+      "pluie"
+    ]
+  },
+  {
+    "id": "parc-jarry",
+    "name": "Parc Jarry",
+    "neighborhood": "Petite-Italie / Marché Jean-Talon",
+    "category": "parc",
+    "address": "285 Rue Gary-Carter",
+    "geo": {
+      "lat": 45.5316,
+      "lng": -73.6294
+    },
+    "metro": [
+      "Bleue"
+    ],
+    "notes": "Grand parc de quartier, courts de tennis, étang. Moins touristique que La Fontaine.",
+    "url": null,
+    "priority": 5,
+    "indoor": false,
+    "weatherTags": [
+      "doux",
+      "chaud",
+      "frais"
+    ]
+  },
+  {
+    "id": "cinema-imperial",
+    "name": "Cinéma Impérial / Cinémathèque",
+    "neighborhood": "Quartier latin / Village",
+    "category": "culture",
+    "address": "1430 Rue de Bleury",
+    "geo": {
+      "lat": 45.5069,
+      "lng": -73.5673
+    },
+    "metro": [
+      "Verte"
+    ],
+    "notes": "Salle historique de 1913. Programmation pointue, projections en version originale.",
+    "url": null,
+    "priority": 5,
+    "indoor": true,
+    "weatherTags": [
+      "pluie",
+      "grand-froid",
+      "canicule"
+    ]
+  },
+  {
+    "id": "reso-acces",
+    "name": "RÉSO — accès par temps extrême",
+    "neighborhood": "Centre-ville",
+    "category": "réseau",
+    "address": "Bonaventure, Place-des-Arts, McGill",
+    "geo": {
+      "lat": 45.5045,
+      "lng": -73.5693
+    },
+    "metro": [
+      "Orange",
+      "Verte"
+    ],
+    "notes": "Entrées les plus pratiques du réseau souterrain. Se repérer à la signalétique RÉSO, pas aux noms de centres commerciaux.",
+    "url": null,
+    "priority": 8,
+    "indoor": true,
+    "weatherTags": [
+      "grand-froid",
+      "canicule",
+      "neige",
+      "pluie"
+    ]
+  },
+  {
+    "id": "urgence-sante",
+    "name": "Urgences et 811",
+    "neighborhood": "Centre-ville",
+    "category": "pratique",
+    "address": "Info-Santé : composer 811",
+    "geo": {
+      "lat": 45.5017,
+      "lng": -73.5673
+    },
+    "metro": [],
+    "notes": "811 pour un avis infirmier gratuit 24 h/24, avant d'aller aux urgences. Sans assurance, une consultation privée coûte 150 à 300 $.",
+    "url": null,
     "priority": 10,
     "indoor": true,
     "weatherTags": []

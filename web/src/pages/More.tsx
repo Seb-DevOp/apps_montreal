@@ -1,4 +1,4 @@
-/** Menu secondaire : accès aux modules qui ne tiennent pas dans la barre basse. */
+/** Menu secondaire : modules qui ne tiennent pas dans la barre basse. */
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getConfig } from '../lib/runtimeConfig';
@@ -11,7 +11,7 @@ const LINKS = [
 ];
 
 export function More(): JSX.Element {
-  const { isAdmin, user } = useAuth();
+  const { user, logout } = useAuth();
   const config = getConfig();
 
   return (
@@ -29,19 +29,6 @@ export function More(): JSX.Element {
             </Link>
           </li>
         ))}
-
-        {isAdmin && (
-          <li className="border-t border-white/5">
-            <Link to="/admin" className="flex items-center gap-3 p-4">
-              <span className="text-xl">⚙️</span>
-              <span className="flex-1">
-                <span className="block text-sm text-frost">Administration</span>
-                <span className="block text-[11px] text-frost/40">Rôles, quotas, contenus</span>
-              </span>
-              <span className="text-frost/25">›</span>
-            </Link>
-          </li>
-        )}
       </ul>
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-frost/40">
@@ -50,10 +37,18 @@ export function More(): JSX.Element {
           Version {config.version} · projet {config.firebase.projectId}
         </p>
         <p className="mt-2 leading-relaxed">
-          L’infrastructure est recréée tous les 3 mois sur un nouveau projet Google Cloud. Cette page
-          se met à jour toute seule : ne désinstalle jamais l’icône de ton écran d’accueil.
+          Application privée, réservée à un seul compte. L’infrastructure peut être recréée sur un
+          nouveau projet Google Cloud sans qu’il soit nécessaire de réinstaller quoi que ce soit.
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={() => void logout()}
+        className="w-full rounded-xl bg-white/10 py-3 text-sm text-frost/70"
+      >
+        Se déconnecter
+      </button>
     </div>
   );
 }

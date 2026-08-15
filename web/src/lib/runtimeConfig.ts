@@ -41,6 +41,8 @@ export interface RuntimeConfig {
   apiBaseUrl: string;
   firebase: FirebaseWebConfig;
   trip: TripConfig;
+  /** Adresse autorisée à ouvrir l application. Miroir de firestore.rules. */
+  ownerEmail: string;
   /** Horodatage de génération du fichier par deploy.sh. */
   deployedAt?: string;
 }
@@ -53,6 +55,7 @@ const buildTimeFallback = (): RuntimeConfig | null => {
   return {
     version: env.VITE_APP_VERSION ?? 'dev',
     apiBaseUrl: env.VITE_API_BASE_URL ?? '/api',
+    ownerEmail: env.VITE_OWNER_EMAIL ?? '',
     firebase: {
       apiKey: env.VITE_FIREBASE_API_KEY,
       authDomain: env.VITE_FIREBASE_AUTH_DOMAIN ?? '',

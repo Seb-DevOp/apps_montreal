@@ -25,7 +25,8 @@
  *   node scripts/android.mjs release     enchaîne manifest + build
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -45,7 +46,10 @@ const command = args[0];
 const force = args.includes('--force');
 
 const env = {
-  domain: process.env.STABLE_DOMAIN ?? '',
+  // ANDROID_HOST prime sur STABLE_DOMAIN : il permet de cibler une origine
+  // différente de celle visée à terme, sans dénaturer le reste de la
+  // configuration. Utile tant qu'aucun domaine personnalisé n'est raccordé.
+  domain: process.env.ANDROID_HOST || process.env.STABLE_DOMAIN || '',
   projectId: process.env.GCP_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT ?? '',
   packageId: process.env.ANDROID_PACKAGE_ID ?? 'org.duckdns.appsmontreal.twa',
   keyAlias: process.env.ANDROID_KEY_ALIAS ?? 'montreal',
@@ -77,12 +81,18 @@ function resolveOrigin() {
     );
   }
 
-  if (/\.(web\.app|firebaseapp\.com)$/.test(env.domain) && !force) {
-    fail(
-      `STABLE_DOMAIN vaut « ${env.domain} », une URL liée au projet Firebase.\n` +
-        "  Elle change à chaque migration : l'APK deviendrait inutilisable.\n" +
-        '  Utilise ton domaine personnalisé, ou --force si tu acceptes ce compromis.',
-    );
+  if (/\.(web\.app|firebaseapp\.com)$/.test(env.domain)) {
+    if (!force) {
+      fail(
+        `L'origine « ${env.domain} » est liée au projet Firebase.\n` +
+          "  Elle change à chaque migration : l'APK deviendrait inutilisable.\n" +
+          '  Utilise un domaine personnalisé, ou --force si tu acceptes ce compromis.',
+      );
+    }
+    warn(`Origine liée au projet : ${env.domain}`);
+    info("  L'APK cessera de fonctionner si le projet GCP est recréé sous un autre nom.");
+    info('  Acceptable tant que le projet reste en place ; à refaire le jour où');
+    info('  un domaine personnalisé est raccordé.');
   }
 
   return `https://${env.domain}`;
@@ -125,7 +135,48 @@ async function checkOriginReachable(origin) {
 // Clé de signature
 // ---------------------------------------------------------------------------
 
+/**
+ * Chemin absolu de keytool.
+ *
+ * On l'invoque SANS shell : le dépôt peut vivre dans un chemin contenant des
+ * espaces (« OneDrive - Ynov »), que le shell Windows découperait. Sans shell,
+ * Node passe les arguments tels quels — mais exige alors un exécutable résolu.
+ */
+/** Chemin absolu de java, pour les mêmes raisons que keytool. */
+function javaCommand() {
+  const home = process.env.JAVA_HOME?.replace(/[\\/]+$/, '');
+  const binary = process.platform === 'win32' ? 'java.exe' : 'java';
+
+  if (home) {
+    const candidate = join(home, 'bin', binary);
+    if (existsSync(candidate)) return candidate;
+  }
+  return binary;
+}
+
+function keytoolCommand() {
+  const home = process.env.JAVA_HOME?.replace(/[\\/]+$/, '');
+  const binary = process.platform === 'win32' ? 'keytool.exe' : 'keytool';
+
+  if (home) {
+    const candidate = join(home, 'bin', binary);
+    if (existsSync(candidate)) return candidate;
+  }
+  return binary;
+}
+
 function requirePasswords() {
+  // Un magasin PKCS12 — le format par défaut depuis Java 9 — n'accepte qu'un
+  // seul mot de passe. keytool ignore silencieusement -keypass, et la
+  // signature échoue plus tard si les deux valeurs diffèrent.
+  if (env.keyPassword && env.storePassword && env.keyPassword !== env.storePassword) {
+    fail(
+      'ANDROID_KEY_PASSWORD et ANDROID_STORE_PASSWORD doivent être identiques.\n' +
+        "  Le format PKCS12 ne gère qu'un mot de passe ; en imposer deux produit\n" +
+        '  une clé que Bubblewrap ne saura pas ouvrir.',
+    );
+  }
+
   if (!env.keyPassword || !env.storePassword) {
     fail(
       'ANDROID_KEY_PASSWORD et ANDROID_STORE_PASSWORD sont requis.\n' +
@@ -151,7 +202,7 @@ function createKeystore() {
 
   // Validité longue : une clé expirée empêche toute nouvelle publication.
   execFileSync(
-    'keytool',
+    keytoolCommand(),
     [
       '-genkeypair',
       '-v',
@@ -164,7 +215,7 @@ function createKeystore() {
       '-keypass', env.keyPassword,
       '-dname', 'CN=Montreal Compagnon, OU=Perso, O=Perso, L=Paris, C=FR',
     ],
-    { stdio: ['ignore', 'inherit', 'inherit'], shell: process.platform === 'win32' },
+    { stdio: ['ignore', 'inherit', 'inherit'] },
   );
 
   ok(`clé créée : android/keystore.jks (alias « ${env.keyAlias} »)`);
@@ -177,10 +228,19 @@ function fingerprint() {
   if (!existsSync(KEYSTORE_PATH)) fail('Aucune clé. Lance « npm run android:keystore ».');
   requirePasswords();
 
+  // Locale forcée : keytool traduit ses libellés, et l'empreinte devient
+  // introuvable dès que la machine n'est pas en anglais.
   const output = execFileSync(
-    'keytool',
-    ['-list', '-v', '-keystore', KEYSTORE_PATH, '-alias', env.keyAlias, '-storepass', env.storePassword],
-    { encoding: 'utf8', shell: process.platform === 'win32' },
+    keytoolCommand(),
+    [
+      '-J-Duser.language=en',
+      '-J-Duser.country=US',
+      '-list', '-v',
+      '-keystore', KEYSTORE_PATH,
+      '-alias', env.keyAlias,
+      '-storepass', env.storePassword,
+    ],
+    { encoding: 'utf8' },
   );
 
   const match = output.match(/SHA256:\s*([A-F0-9:]+)/i);
@@ -217,10 +277,12 @@ function writeManifest(origin) {
     signingKey: { path: KEYSTORE_PATH, alias: env.keyAlias },
     appVersionName: env.versionName,
     appVersionCode: env.versionCode,
+    // Bubblewrap attend `shortName` en camelCase — `short_name`, la clé du
+    // manifeste web, produit un plantage à la génération Gradle.
     shortcuts: [
-      { name: 'Calculateur de taxes', short_name: 'Taxes', url: '/taxes', chosenIconUrl: `${origin}/icons/icon-192.png` },
-      { name: 'Journal photo', short_name: 'Journal', url: '/journal', chosenIconUrl: `${origin}/icons/icon-192.png` },
-      { name: 'Check-list départ', short_name: 'Check-list', url: '/checklist', chosenIconUrl: `${origin}/icons/icon-192.png` },
+      { name: 'Calculateur de taxes', shortName: 'Taxes', url: '/taxes', chosenIconUrl: `${origin}/icons/icon-192.png` },
+      { name: 'Journal photo', shortName: 'Journal', url: '/journal', chosenIconUrl: `${origin}/icons/icon-192.png` },
+      { name: 'Check-list départ', shortName: 'Check-list', url: '/checklist', chosenIconUrl: `${origin}/icons/icon-192.png` },
     ],
     generatorApp: 'montreal-compagnon',
     webManifestUrl: `${origin}/manifest.webmanifest`,
@@ -328,45 +390,225 @@ async function registerAndroidApp() {
     ok(`empreinte SHA-256 enregistrée : ${sha}`);
   }
 
-  info('');
-  info('Firebase Hosting publiera assetlinks.json au prochain déploiement.');
-  info(`  https://${env.domain}/.well-known/assetlinks.json`);
+  writeAssetLinks(sha);
+}
+
+/**
+ * Écrit `/.well-known/assetlinks.json` dans les sources de la PWA.
+ *
+ * Firebase Hosting sait générer ce fichier depuis les applications Android
+ * déclarées, mais la génération est opaque et s'est révélée peu fiable. On le
+ * produit donc explicitement, et `firebase.json` désactive la génération
+ * automatique (`appAssociation: "NONE"`) pour qu'elle ne l'écrase pas.
+ *
+ * Le contenu est public par nature : il sert justement à prouver, depuis le
+ * site, quelle application est autorisée à l'afficher sans barre d'adresse.
+ */
+function writeAssetLinks(sha) {
+  const target = join(ROOT, 'web', 'public', '.well-known');
+  mkdirSync(target, { recursive: true });
+
+  const statements = [
+    {
+      relation: ['delegate_permission/common.handle_all_urls'],
+      target: {
+        namespace: 'android_app',
+        package_name: env.packageId,
+        sha256_cert_fingerprints: [sha],
+      },
+    },
+  ];
+
+  writeFileSync(join(target, 'assetlinks.json'), `${JSON.stringify(statements, null, 2)}\n`);
+  ok('web/public/.well-known/assetlinks.json écrit');
+  info('  Redéploie le site pour le publier, sinon Android affichera la barre d’adresse.');
 }
 
 // ---------------------------------------------------------------------------
 // Construction
 // ---------------------------------------------------------------------------
 
+/**
+ * Bubblewrap cherche un JDK et un SDK Android dans ~/.bubblewrap/config.json.
+ * Sans ce fichier, il tente un téléchargement interactif — impossible en CI, et
+ * inutile ici puisque les deux sont déjà installés.
+ *
+ * Écrit par Node et non par le shell : PowerShell produit de l'UTF-8 avec BOM,
+ * que le parseur JSON de Bubblewrap rejette (« Unexpected token '﻿' »).
+ */
+function ensureBubblewrapConfig() {
+  const home = process.env.HOME ?? process.env.USERPROFILE;
+  if (!home) return;
+
+  const configPath = join(home, '.bubblewrap', 'config.json');
+  if (existsSync(configPath)) return;
+
+  const jdkPath = process.env.JAVA_HOME?.replace(/[\\/]+$/, '');
+  const androidSdkPath = (
+    process.env.ANDROID_HOME ??
+    process.env.ANDROID_SDK_ROOT ??
+    (process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'Android', 'Sdk') : '')
+  ).replace(/[\\/]+$/, '');
+
+  if (!jdkPath || !androidSdkPath || !existsSync(androidSdkPath)) {
+    warn('JDK ou SDK Android introuvables — Bubblewrap tentera de les télécharger.');
+    info('  Définis JAVA_HOME et ANDROID_HOME pour éviter un téléchargement de ~500 Mo.');
+    return;
+  }
+
+  mkdirSync(dirname(configPath), { recursive: true });
+  writeFileSync(configPath, `${JSON.stringify({ jdkPath, androidSdkPath }, null, 2)}\n`, 'utf8');
+  info(`configuration Bubblewrap écrite : ${configPath}`);
+}
+
+/** Racine du SDK Android, quelle qu'en soit la provenance. */
+function androidSdkPath() {
+  const candidate =
+    process.env.ANDROID_HOME ??
+    process.env.ANDROID_SDK_ROOT ??
+    (process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'Android', 'Sdk') : '');
+  return candidate.replace(/[\\/]+$/, '');
+}
+
+/**
+ * Bubblewrap valide le SDK en cherchant `<sdk>/tools` ou `<sdk>/bin` —
+ * l'ancienne disposition. Les SDK modernes rangent ces exécutables sous
+ * `cmdline-tools/latest/`, et la validation échoue sur « The provided
+ * androidSdk isn't correct ». On recrée la disposition attendue.
+ */
+function ensureSdkLayout() {
+  const sdk = androidSdkPath();
+  if (!sdk || !existsSync(sdk)) return;
+  if (existsSync(join(sdk, 'bin')) || existsSync(join(sdk, 'tools'))) return;
+
+  const source = join(sdk, 'cmdline-tools', 'latest');
+  if (!existsSync(join(source, 'bin'))) {
+    warn('cmdline-tools introuvables dans le SDK Android.');
+    info(`  Installe-les via sdkmanager, ou dépose-les dans ${source}`);
+    return;
+  }
+
+  cpSync(join(source, 'bin'), join(sdk, 'bin'), { recursive: true });
+  cpSync(join(source, 'lib'), join(sdk, 'lib'), { recursive: true });
+  info('disposition du SDK ajustée pour Bubblewrap (bin/ et lib/ à la racine)');
+}
+
+/** Version la plus récente des build-tools installées. */
+function buildToolsPath() {
+  const root = join(androidSdkPath(), 'build-tools');
+  if (!existsSync(root)) fail('build-tools absentes du SDK Android.');
+
+  const versions = readdirSync(root)
+    .filter((entry) => /^\d+/.test(entry))
+    .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
+  if (versions.length === 0) fail('Aucune version de build-tools installée.');
+  return join(root, versions[0]);
+}
+
+/**
+ * Aligne puis signe l'APK produit par Gradle.
+ * Gradle le laisse non signé : la signature est portée par la clé locale, que
+ * le projet généré ne connaît pas.
+ */
+function signApk() {
+  const tools = buildToolsPath();
+  const exe = (name) => join(tools, process.platform === 'win32' ? `${name}.exe` : name);
+
+  const unsigned = join(ANDROID_DIR, 'app', 'build', 'outputs', 'apk', 'release', 'app-release-unsigned.apk');
+  if (!existsSync(unsigned)) fail(`APK introuvable après compilation : ${unsigned}`);
+
+  const aligned = join(ANDROID_DIR, 'app-release-aligned.apk');
+  const signed = join(ANDROID_DIR, 'app-release-signed.apk');
+
+  // zipalign avant signature : l'inverse invaliderait la signature.
+  const align = spawnSync(exe('zipalign'), ['-p', '-f', '4', unsigned, aligned], { stdio: 'inherit' });
+  if (align.status !== 0) fail('Échec de zipalign.');
+
+  // apksigner est distribué comme lanceur .bat, qui impose un shell — lequel
+  // découpe les chemins contenant des espaces (« OneDrive - Ynov »). Le .jar
+  // sous-jacent s'exécute directement par Java, sans shell ni quoting.
+  const jar = join(tools, 'lib', 'apksigner.jar');
+  if (!existsSync(jar)) fail(`apksigner.jar introuvable dans ${tools}`);
+
+  const sign = spawnSync(
+    javaCommand(),
+    [
+      '-jar', jar,
+      'sign',
+      '--ks', KEYSTORE_PATH,
+      '--ks-key-alias', env.keyAlias,
+      '--ks-pass', `pass:${env.storePassword}`,
+      '--key-pass', `pass:${env.keyPassword}`,
+      '--out', signed,
+      aligned,
+    ],
+    { stdio: 'inherit' },
+  );
+  if (sign.status !== 0) fail('Échec de la signature.');
+
+  rmSync(aligned, { force: true });
+
+  const size = Math.round(readFileSync(signed).length / 1024);
+  ok(`APK signé : android/app-release-signed.apk (${size} Ko)`);
+}
+
 function build() {
   if (!existsSync(MANIFEST_PATH)) fail('Manifeste absent. Lance « npm run android:manifest ».');
   if (!existsSync(KEYSTORE_PATH)) fail('Clé absente. Lance « npm run android:keystore ».');
   requirePasswords();
+  ensureSdkLayout();
+  ensureBubblewrapConfig();
 
-  const result = spawnSync(
-    'npx',
-    ['--yes', '@bubblewrap/cli@1.24.1', 'build', '--skipPwaValidation'],
-    {
+  const bubblewrapEnv = {
+    ...process.env,
+    // Évite les invites de mot de passe au moment de la signature.
+    BUBBLEWRAP_KEYSTORE_PASSWORD: env.storePassword,
+    BUBBLEWRAP_KEY_PASSWORD: env.keyPassword,
+  };
+
+  const bubblewrap = (subArgs) =>
+    spawnSync('npx', ['--yes', '@bubblewrap/cli@1.24.1', ...subArgs], {
       cwd: ANDROID_DIR,
       stdio: 'inherit',
       shell: process.platform === 'win32',
-      env: {
-        ...process.env,
-        // Bubblewrap lit ces variables plutôt que d'ouvrir une invite.
-        BUBBLEWRAP_KEYSTORE_PASSWORD: env.storePassword,
-        BUBBLEWRAP_KEY_PASSWORD: env.keyPassword,
-      },
-    },
+      env: bubblewrapEnv,
+    });
+
+  // 1. (Re)génère le projet Android à partir du manifeste.
+  //    --skipVersionUpgrade est indispensable : sans lui, Bubblewrap réclame
+  //    interactivement un nouveau versionName et la construction se fige.
+  //    C'est ce script qui pilote les versions, via le manifeste.
+  console.log('Génération du projet Android…');
+  if (bubblewrap(['update', '--skipVersionUpgrade']).status !== 0) {
+    fail('Échec de la génération du projet (bubblewrap update).');
+  }
+
+  // 2. Déclare le manifeste comme « à jour ». Sans ce fichier, `build` ouvre
+  //    une invite interactive pour proposer de régénérer le projet.
+  writeFileSync(
+    join(ANDROID_DIR, 'manifest-checksum.txt'),
+    createHash('sha1').update(readFileSync(MANIFEST_PATH)).digest('hex'),
   );
 
-  if (result.status !== 0) fail('Échec de la construction Bubblewrap.');
+  // 3. Compile via Gradle, puis aligne et signe avec les outils du SDK.
+  //
+  //    `bubblewrap build` ferait les trois d'un coup, mais il invoque
+  //    `gradlew.bat` à travers un environnement de remplacement où cmd.exe ne
+  //    le retrouve pas (« n'est pas reconnu »). Piloter Gradle et apksigner
+  //    directement supprime cette dépendance et donne le même résultat sur
+  //    Windows comme sur un runner Linux.
+  console.log('Compilation Gradle…');
+  const gradleCmd = process.platform === 'win32' ? '.\\gradlew.bat' : './gradlew';
+  const gradle = spawnSync(gradleCmd, ['assembleRelease', '--no-daemon'], {
+    cwd: ANDROID_DIR,
+    stdio: 'inherit',
+    shell: true,
+    env: bubblewrapEnv,
+  });
+  if (gradle.status !== 0) fail('Échec de la compilation Gradle.');
 
-  const apk = join(ANDROID_DIR, 'app-release-signed.apk');
-  if (existsSync(apk)) {
-    const size = Math.round(readFileSync(apk).length / 1024);
-    ok(`APK signé : android/app-release-signed.apk (${size} Ko)`);
-  } else {
-    warn('Construction terminée, mais app-release-signed.apk est introuvable.');
-  }
+  signApk();
 }
 
 // ---------------------------------------------------------------------------

@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db } from '../firebase.js';
 import { getWeather, type WeatherMood, type WeatherSky, type WeatherSnapshot } from '../services/weather.js';
-import { requireGuest } from '../middleware/auth.js';
+import { requireOwner } from '../middleware/auth.js';
 
 const coordsSchema = z.object({
   lat: z.coerce.number().min(-90).max(90).optional(),
@@ -62,7 +62,7 @@ interface SpotDoc {
 }
 
 export async function weatherRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/api/weather', { preHandler: requireGuest }, async (request, reply) => {
+  app.get('/api/weather', { preHandler: requireOwner }, async (request, reply) => {
     const parsed = coordsSchema.safeParse(request.query);
     if (!parsed.success) {
       return reply.code(400).send({ error: 'bad_request', details: parsed.error.flatten() });
@@ -70,7 +70,8 @@ export async function weatherRoutes(app: FastifyInstance): Promise<void> {
     const { lat = config.montreal.lat, lon = config.montreal.lon, force = false } = parsed.data;
 
     try {
-      const snapshot = await getWeather(lat, lon, force && request.user?.role === 'admin');
+      // Le seul utilisateur autorisé est le propriétaire : plus de condition de rôle.
+      const snapshot = await getWeather(lat, lon, force);
       return reply.send(snapshot);
     } catch (error) {
       request.log.error({ err: error }, 'échec récupération météo');
@@ -84,7 +85,7 @@ export async function weatherRoutes(app: FastifyInstance): Promise<void> {
     }
   });
 
-  app.get('/api/activities', { preHandler: requireGuest }, async (request, reply) => {
+  app.get('/api/activities', { preHandler: requireOwner }, async (request, reply) => {
     const parsed = coordsSchema.safeParse(request.query);
     const { lat = config.montreal.lat, lon = config.montreal.lon } = parsed.success ? parsed.data : {};
 

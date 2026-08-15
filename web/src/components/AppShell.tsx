@@ -18,7 +18,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { to: '/', label: 'Accueil', icon: '🏠' },
-  { to: '/journal', label: 'Journal', icon: '📸' },
+  { to: '/embauche', label: 'Embauche', icon: '💼' },
   { to: '/taxes', label: 'Taxes', icon: '💵' },
   { to: '/spots', label: 'Spots', icon: '📍' },
   { to: '/plus', label: 'Plus', icon: '⋯' },
@@ -26,7 +26,6 @@ const TABS: Tab[] = [
 
 const TITLES: Record<string, string> = {
   '/': 'Montréal Compagnon',
-  '/journal': 'Journal d’aventures',
   '/taxes': 'Taxes & pourboires',
   '/spots': 'Micro-spots',
   '/plus': 'Plus',
@@ -34,11 +33,12 @@ const TITLES: Record<string, string> = {
   '/meteo': 'Météo ressentie',
   '/lexique': 'Argot québécois',
   '/horloge': 'Double horloge',
+  '/embauche': 'Embauche',
   '/admin': 'Administration',
 };
 
 export function AppShell(): JSX.Element {
-  const { user, role, logout } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const title = TITLES[location.pathname] ?? 'Montréal Compagnon';
 
@@ -50,11 +50,6 @@ export function AppShell(): JSX.Element {
         <div className="mx-auto flex max-w-2xl items-center justify-between">
           <h1 className="truncate text-lg font-semibold">{title}</h1>
           <div className="flex items-center gap-2">
-            {role === 'admin' && (
-              <span className="rounded-full bg-stm/20 px-2 py-0.5 text-[10px] uppercase tracking-wider text-stm">
-                admin
-              </span>
-            )}
             <button
               type="button"
               onClick={() => void logout()}

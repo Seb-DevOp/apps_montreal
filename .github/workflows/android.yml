@@ -44,6 +44,9 @@ jobs:
     name: Construire et publier l'APK
     runs-on: ubuntu-latest
     env:
+      # ANDROID_HOST prime sur STABLE_DOMAIN : il permet de viser une origine
+      # qui fonctionne aujourd'hui sans dénaturer le domaine visé à terme.
+      ANDROID_HOST: ${{ vars.ANDROID_HOST || vars.STABLE_DOMAIN }}
       STABLE_DOMAIN: ${{ vars.STABLE_DOMAIN }}
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       ANDROID_PACKAGE_ID: ${{ vars.ANDROID_PACKAGE_ID || 'org.duckdns.appsmontreal.twa' }}
@@ -62,15 +65,16 @@ jobs:
       - name: Vérifier la configuration
         run: |
           missing=0
-          if [ -z "$STABLE_DOMAIN" ]; then
-            echo "::error::La variable STABLE_DOMAIN est requise : une TWA fige son origine."
+          if [ -z "$ANDROID_HOST" ]; then
+            echo "::error::ANDROID_HOST ou STABLE_DOMAIN est requis : une TWA fige son origine."
             missing=1
           fi
-          case "$STABLE_DOMAIN" in
+          case "$ANDROID_HOST" in
             *.web.app|*.firebaseapp.com)
-              echo "::error::STABLE_DOMAIN pointe sur une URL liée au projet Firebase."
-              echo "::error::Elle change à chaque migration : l'APK deviendrait inutilisable."
-              missing=1
+              # Toléré, mais signalé : l'APK ne survivra pas à une migration.
+              echo "::warning::L'APK vise $ANDROID_HOST, une URL liée au projet Firebase."
+              echo "::warning::Il cessera de fonctionner si le projet GCP est recréé sous un autre nom."
+              echo "ORIGIN_IS_PROJECT_BOUND=1" >> "$GITHUB_ENV"
               ;;
           esac
           if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
@@ -98,22 +102,12 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/keystore.jks
           echo "Clé restaurée ($(stat -c%s android/keystore.jks) octets)."
 
-      - name: Configurer Bubblewrap
-        run: |
-          # Bubblewrap cherche un JDK et un SDK Android déclarés dans son
-          # fichier de configuration ; sans lui, il tente un téléchargement
-          # interactif qui ne peut pas aboutir sur un runner.
-          mkdir -p ~/.bubblewrap
-          cat > ~/.bubblewrap/config.json <<EOF
-          {
-            "jdkPath": "${JAVA_HOME}",
-            "androidSdkPath": "${ANDROID_HOME}"
-          }
-          EOF
-          cat ~/.bubblewrap/config.json
+      # La configuration Bubblewrap et la disposition attendue du SDK sont
+      # prises en charge par le script lui-même (ensureBubblewrapConfig,
+      # ensureSdkLayout) : identiques en local et sur le runner.
 
       - name: Générer le manifeste TWA
-        run: node scripts/android.mjs manifest
+        run: node scripts/android.mjs manifest --force
 
       - name: Construire l'APK signé
         run: node scripts/android.mjs build

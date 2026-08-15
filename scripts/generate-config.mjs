@@ -181,6 +181,9 @@ const config = {
   // serveur. La PWA n'a donc jamais connaissance de l'URL *.run.app, qui
   // change à chaque migration de projet.
   apiBaseUrl: '/api',
+  // Seule adresse autorisée. Doit correspondre à ownerEmail() dans
+  // firestore.rules — la règle fait foi, ceci n'est qu'un confort d'affichage.
+  ownerEmail: process.env.OWNER_EMAIL || process.env.ADMIN_EMAIL || '',
   firebase: {
     apiKey: sdk.apiKey,
     authDomain: sdk.authDomain ?? `${projectId}.firebaseapp.com`,

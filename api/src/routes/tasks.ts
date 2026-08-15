@@ -10,7 +10,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../firebase.js';
-import { requireAdmin, requireGuest } from '../middleware/auth.js';
+import { requireOwner } from '../middleware/auth.js';
 
 /** Format d'une note Google Takeout (Keep/*.json). */
 const keepNoteSchema = z.object({
@@ -84,7 +84,7 @@ export async function taskRoutes(app: FastifyInstance): Promise<void> {
    * tâche. L'opération est idempotente — l'id du document est dérivé du texte,
    * donc réimporter le même export ne duplique rien.
    */
-  app.post('/api/tasks/import-keep', { preHandler: requireAdmin }, async (request, reply) => {
+  app.post('/api/tasks/import-keep', { preHandler: requireOwner }, async (request, reply) => {
     const parsed = importSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.code(400).send({ error: 'bad_request', details: parsed.error.flatten() });
@@ -138,7 +138,7 @@ export async function taskRoutes(app: FastifyInstance): Promise<void> {
   });
 
   /** Timeline calculée : chaque tâche reçoit sa date absolue et son urgence. */
-  app.get('/api/tasks/timeline', { preHandler: requireGuest }, async (_request, reply) => {
+  app.get('/api/tasks/timeline', { preHandler: requireOwner }, async (_request, reply) => {
     const [tripSnap, tasksSnap] = await Promise.all([
       db.collection('trips').doc('current').get(),
       db.collection('tasks').get(),

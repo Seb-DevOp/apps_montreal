@@ -32,6 +32,9 @@ export const config = {
     .map((o) => o.trim())
     .filter(Boolean),
 
+  /** Seule adresse autorisée. Miroir de ownerEmail() dans firestore.rules. */
+  ownerEmail: optional('OWNER_EMAIL', ''),
+
   /** Clé OpenWeatherMap (montée depuis Secret Manager). */
   openWeatherKey: optional('OPENWEATHER_API_KEY', ''),
 

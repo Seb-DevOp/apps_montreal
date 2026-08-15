@@ -1,20 +1,20 @@
 /**
- * Vérification du jeton Firebase et exposition du rôle sur la requête.
+ * Vérification du jeton Firebase — application mono-utilisateur.
  *
- * Le rôle vit dans un custom claim, posé par `scripts/set-admin.mjs` ou par la
- * route d'administration. Il est donc signé par Firebase : un client ne peut
- * pas le forger.
+ * Il n'y a plus de rôles : une seule adresse e-mail, vérifiée, a le droit
+ * d'appeler l'API. Même règle et même valeur que dans firestore.rules, pour
+ * qu'il n'existe qu'une définition du « propriétaire » à faire évoluer.
+ *
+ * L'adresse plutôt que l'UID : les UID Firebase sont propres à un projet et
+ * changeraient à chaque migration trimestrielle.
  */
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { auth } from '../firebase.js';
-
-export type Role = 'admin' | 'guest' | 'blocked';
+import { config } from '../config.js';
 
 export interface AuthUser {
   uid: string;
-  email?: string;
-  name?: string;
-  role: Role;
+  email: string;
 }
 
 declare module 'fastify' {
@@ -30,43 +30,30 @@ function extractToken(request: FastifyRequest): string | null {
   return token.length > 0 ? token : null;
 }
 
-/** Attache `request.user` si un jeton valide est présent, sans jamais rejeter. */
-export async function optionalAuth(request: FastifyRequest): Promise<void> {
+/**
+ * Exige le compte propriétaire. Distingue trois échecs, parce qu'ils appellent
+ * des corrections différentes : jeton absent, jeton invalide, compte non
+ * autorisé.
+ */
+export async function requireOwner(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const token = extractToken(request);
-  if (!token) return;
+  if (!token) {
+    return reply.code(401).send({ error: 'unauthenticated', message: 'Connexion requise.' });
+  }
+
+  let decoded;
   try {
-    const decoded = await auth.verifyIdToken(token);
-    const claimRole = decoded.role;
-    request.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      name: decoded.name as string | undefined,
-      role: claimRole === 'admin' || claimRole === 'blocked' ? claimRole : 'guest',
-    };
+    decoded = await auth.verifyIdToken(token);
   } catch {
-    // Jeton expiré ou invalide : on laisse `request.user` vide, les gardes
-    // ci-dessous produiront un 401 explicite.
+    return reply.code(401).send({ error: 'invalid_token', message: 'Session expirée.' });
   }
-}
 
-/** Exige un utilisateur connecté et non bloqué. */
-export async function requireGuest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  await optionalAuth(request);
-  if (!request.user) {
-    return reply.code(401).send({ error: 'unauthenticated', message: 'Connexion requise.' });
-  }
-  if (request.user.role === 'blocked') {
-    return reply.code(403).send({ error: 'forbidden', message: 'Accès révoqué.' });
-  }
-}
+  const email = (decoded.email ?? '').toLowerCase();
+  const owner = config.ownerEmail.toLowerCase();
 
-/** Exige le rôle admin. */
-export async function requireAdmin(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-  await optionalAuth(request);
-  if (!request.user) {
-    return reply.code(401).send({ error: 'unauthenticated', message: 'Connexion requise.' });
+  if (!owner || email !== owner || decoded.email_verified !== true) {
+    return reply.code(403).send({ error: 'forbidden', message: 'Compte non autorisé.' });
   }
-  if (request.user.role !== 'admin') {
-    return reply.code(403).send({ error: 'forbidden', message: 'Réservé à l’administrateur.' });
-  }
+
+  request.user = { uid: decoded.uid, email };
 }

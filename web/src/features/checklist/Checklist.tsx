@@ -21,7 +21,6 @@ import {
 import { db } from '../../lib/firebase';
 import { api } from '../../lib/api';
 import { getConfig } from '../../lib/runtimeConfig';
-import { useAuth } from '../../contexts/AuthContext';
 import type { Task } from '../../types';
 
 const CATEGORY_ICON: Record<string, string> = {
@@ -69,7 +68,6 @@ function useTasks(): { tasks: Task[]; loading: boolean } {
 }
 
 export function Checklist(): JSX.Element {
-  const { isAdmin } = useAuth();
   const { tasks, loading } = useTasks();
   const { trip } = getConfig();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -202,12 +200,11 @@ export function Checklist(): JSX.Element {
                   <button
                     type="button"
                     onClick={() => void toggle(task)}
-                    disabled={!isAdmin}
                     aria-pressed={task.done}
                     aria-label={task.done ? 'Marquer à faire' : 'Marquer comme fait'}
                     className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition ${
                       task.done ? 'border-mint bg-mint text-ink-900' : 'border-white/25'
-                    } ${!isAdmin ? 'opacity-60' : ''}`}
+                    }`}
                   >
                     {task.done && '✓'}
                   </button>
@@ -228,7 +225,7 @@ export function Checklist(): JSX.Element {
                     </p>
                   </div>
 
-                  {isAdmin && (
+                  {(
                     <button
                       type="button"
                       onClick={() => void deleteDoc(doc(db(), 'tasks', task.id))}
@@ -246,7 +243,7 @@ export function Checklist(): JSX.Element {
       })}
 
       {/* Outils admin */}
-      {isAdmin && (
+      {(
         <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
           <h3 className="text-xs uppercase tracking-wider text-frost/50">Ajouter une tâche</h3>
           <div className="flex gap-2">

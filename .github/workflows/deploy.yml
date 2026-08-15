@@ -322,6 +322,7 @@ jobs:
             NODE_ENV=production
             APP_VERSION=${{ github.sha }}
             STORAGE_BUCKET=${{ env.PROJECT_ID }}.firebasestorage.app
+            OWNER_EMAIL=${{ vars.OWNER_EMAIL || vars.ADMIN_EMAIL }}
             ALLOWED_ORIGINS=${{ env.ALLOWED_ORIGINS }}
           # Vide tant que la clé n'a pas de version dans Secret Manager : sinon
           # Cloud Run refuse de démarrer la révision, et tout le déploiement

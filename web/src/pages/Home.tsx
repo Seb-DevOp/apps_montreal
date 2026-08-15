@@ -1,19 +1,25 @@
 /**
  * Accueil : ce dont on a besoin en trois secondes, sans naviguer.
- * L'ordre des blocs suit l'usage réel — l'heure et le compte à rebours
- * d'abord, la dernière photo ensuite, les raccourcis en bas.
+ * L'ordre suit l'usage réel — l'heure et le compte à rebours d'abord, les
+ * raccourcis ensuite.
  */
 import { Link } from 'react-router-dom';
 import { DualClock } from '../features/clock/DualClock';
-import { usePosts } from '../features/journal/usePosts';
 import { getConfig } from '../lib/runtimeConfig';
 import { useAuth } from '../contexts/AuthContext';
+
+const SHORTCUTS = [
+  { to: '/embauche', icon: '💼', label: 'Embauche', hint: 'Candidatures & entretiens' },
+  { to: '/checklist', icon: '✅', label: 'Check & Sync', hint: 'Timeline J-30 → J-0' },
+  { to: '/taxes', icon: '💵', label: 'Taxes', hint: 'TPS + TVQ + pourboire' },
+  { to: '/meteo', icon: '🌡', label: 'Ressenti réel', hint: 'Humidex & vent' },
+  { to: '/spots', icon: '📍', label: 'Spots', hint: 'Par quartier' },
+  { to: '/lexique', icon: '🗣', label: 'Argot', hint: 'Décoder le québécois' },
+];
 
 export function Home(): JSX.Element {
   const { user } = useAuth();
   const { trip } = getConfig();
-  const { posts } = usePosts({ max: 1 });
-  const latest = posts[0];
 
   const departureMs = Date.parse(`${trip.departureDate}T00:00:00Z`);
   const returnMs = Date.parse(`${trip.returnDate}T00:00:00Z`);
@@ -34,30 +40,8 @@ export function Home(): JSX.Element {
 
       <DualClock />
 
-      {latest && (
-        <Link to="/journal" className="block overflow-hidden rounded-2xl border border-white/10">
-          <img
-            src={latest.thumbUrl}
-            alt={latest.caption || 'Dernière photo'}
-            className="h-48 w-full object-cover"
-            loading="lazy"
-          />
-          <div className="bg-white/5 p-3">
-            <p className="text-xs uppercase tracking-wider text-frost/40">Dernière photo</p>
-            <p className="mt-0.5 line-clamp-2 text-sm text-frost/80">
-              {latest.caption || latest.neighborhood || 'Sans légende'}
-            </p>
-          </div>
-        </Link>
-      )}
-
       <div className="grid grid-cols-2 gap-3">
-        {[
-          { to: '/checklist', icon: '✅', label: 'Check & Sync', hint: 'Timeline J-30 → J-0' },
-          { to: '/meteo', icon: '🌡', label: 'Ressenti réel', hint: 'Humidex & vent' },
-          { to: '/lexique', icon: '🗣', label: 'Argot', hint: 'Décoder le québécois' },
-          { to: '/taxes', icon: '💵', label: 'Taxes', hint: 'TPS + TVQ + pourboire' },
-        ].map((shortcut) => (
+        {SHORTCUTS.map((shortcut) => (
           <Link
             key={shortcut.to}
             to={shortcut.to}

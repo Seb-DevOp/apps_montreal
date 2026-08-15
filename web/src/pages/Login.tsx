@@ -1,50 +1,23 @@
 /**
- * Connexion — Google ou e-mail/mot de passe.
+ * Connexion — Google uniquement.
  *
- * Les proches se connectent surtout avec Google (aucun mot de passe à retenir,
- * un tap). L'e-mail reste disponible pour ceux qui n'ont pas de compte Google
- * ou qui refusent le lien avec leur identité Google.
+ * L'application n'a qu'un utilisateur : proposer la création d'un compte par
+ * e-mail n'aurait aucun sens, puisqu'aucun compte nouvellement créé ne serait
+ * autorisé. Un seul bouton, donc.
  */
-import { useState, type FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-type Mode = 'signin' | 'signup' | 'reset';
-
 export function Login(): JSX.Element {
-  const { signInWithGoogle, signInWithEmail, registerWithEmail, resetPassword, error } = useAuth();
-  const [mode, setMode] = useState<Mode>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setBusy(true);
-    setNotice(null);
-    try {
-      if (mode === 'signin') await signInWithEmail(email, password);
-      else if (mode === 'signup') await registerWithEmail(email, password, name);
-      else {
-        await resetPassword(email);
-        setNotice('E-mail de réinitialisation envoyé. Pense à vérifier les indésirables.');
-      }
-    } catch {
-      // Le message est déjà exposé par le contexte.
-    } finally {
-      setBusy(false);
-    }
-  };
+  const { signInWithGoogle, error } = useAuth();
 
   return (
     <div className="flex min-h-dvh flex-col justify-center px-6 py-12">
       <div className="mx-auto w-full max-w-sm">
-        <div className="mb-8 text-center">
+        <div className="mb-10 text-center">
           <div className="text-5xl">🍁</div>
           <h1 className="mt-3 text-2xl font-semibold text-frost">Montréal Compagnon</h1>
           <p className="mt-1 text-sm text-frost/50">
-            Le carnet de bord du voyage — et la fenêtre ouverte pour ceux qui restent.
+            Préparation, repères et suivi du départ.
           </p>
         </div>
 
@@ -71,86 +44,10 @@ export function Login(): JSX.Element {
           Continuer avec Google
         </button>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-frost/25">
-          <div className="h-px flex-1 bg-white/10" />
-          ou
-          <div className="h-px flex-1 bg-white/10" />
-        </div>
+        {error && <p className="mt-4 text-center text-sm text-maple">{error}</p>}
 
-        <form onSubmit={submit} className="space-y-3">
-          {mode === 'signup' && (
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Ton prénom"
-              autoComplete="given-name"
-              className="w-full rounded-xl bg-white/5 px-4 py-3 text-frost outline-none placeholder:text-frost/30"
-            />
-          )}
-
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Adresse e-mail"
-            autoComplete="email"
-            inputMode="email"
-            className="w-full rounded-xl bg-white/5 px-4 py-3 text-frost outline-none placeholder:text-frost/30"
-          />
-
-          {mode !== 'reset' && (
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Mot de passe"
-              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              className="w-full rounded-xl bg-white/5 px-4 py-3 text-frost outline-none placeholder:text-frost/30"
-            />
-          )}
-
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-xl bg-stm py-3.5 font-medium text-white disabled:opacity-50"
-          >
-            {busy
-              ? '…'
-              : mode === 'signin'
-                ? 'Se connecter'
-                : mode === 'signup'
-                  ? 'Créer mon compte'
-                  : 'Réinitialiser le mot de passe'}
-          </button>
-        </form>
-
-        {error && <p className="mt-3 text-center text-sm text-maple">{error}</p>}
-        {notice && <p className="mt-3 text-center text-sm text-mint">{notice}</p>}
-
-        <div className="mt-6 flex justify-center gap-4 text-sm text-frost/45">
-          {mode !== 'signin' && (
-            <button type="button" onClick={() => setMode('signin')}>
-              J’ai déjà un compte
-            </button>
-          )}
-          {mode !== 'signup' && (
-            <button type="button" onClick={() => setMode('signup')}>
-              Créer un compte
-            </button>
-          )}
-          {mode !== 'reset' && (
-            <button type="button" onClick={() => setMode('reset')}>
-              Mot de passe oublié
-            </button>
-          )}
-        </div>
-
-        <p className="mt-8 text-center text-xs leading-relaxed text-frost/25">
-          Les comptes créés ont un accès en lecture au journal et aux informations pratiques.
-          Seul l’administrateur peut publier.
+        <p className="mt-10 text-center text-xs leading-relaxed text-frost/25">
+          Application privée, réservée à un seul compte.
         </p>
       </div>
     </div>

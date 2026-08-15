@@ -1,48 +1,485 @@
 [
-  { "id": "depanneur", "term": "Dépanneur (dep)", "definition": "Petite épicerie de quartier ouverte tard, souvent 24 h/24. On y trouve bière, cigarettes, lait et loterie.", "example": "Je passe au dep chercher une pinte de lait.", "category": "quotidien", "frenchEquivalent": "épicerie de nuit, superette" },
-  { "id": "char", "term": "Char", "definition": "Une voiture. Rien à voir avec un char d'assaut.", "example": "On prend mon char ou le métro ?", "category": "transport", "frenchEquivalent": "bagnole, caisse" },
-  { "id": "magasiner", "term": "Magasiner", "definition": "Faire du shopping, comparer avant d'acheter. Le nom correspondant est « magasinage ».", "example": "Je vais magasiner des bottes d'hiver sur Sainte-Cath.", "category": "quotidien", "frenchEquivalent": "faire les magasins" },
-  { "id": "tantot", "term": "Tantôt", "definition": "Tout à l'heure — mais aussi bien dans le passé que dans le futur. Le contexte tranche.", "example": "Je t'ai vu tantôt au parc. · On se voit tantôt !", "category": "expression", "frenchEquivalent": "tout à l'heure" },
-  { "id": "presentement", "term": "Présentement", "definition": "En ce moment. Beaucoup plus courant qu'en France, sans nuance soutenue.", "example": "Il neige présentement.", "category": "expression", "frenchEquivalent": "actuellement" },
-  { "id": "chum", "term": "Chum", "definition": "Petit ami, ou copain proche selon le contexte. Au féminin : « blonde » pour la petite amie.", "example": "Mon chum arrive de Québec en fin de semaine.", "category": "quotidien", "frenchEquivalent": "copain, mec" },
-  { "id": "blonde", "term": "Blonde", "definition": "Petite amie, quelle que soit la couleur de ses cheveux.", "example": "Je te présente ma blonde, Camille.", "category": "quotidien", "frenchEquivalent": "copine" },
-  { "id": "fin-de-semaine", "term": "Fin de semaine", "definition": "Le week-end. L'anglicisme « week-end » est mal vu au Québec, qui défend le français plus fermement qu'en France.", "example": "Qu'est-ce que tu fais en fin de semaine ?", "category": "expression", "frenchEquivalent": "week-end" },
-  { "id": "pantoute", "term": "Pantoute", "definition": "Pas du tout. Contraction de « pas en tout ».", "example": "T'as pas aimé ? — Pantoute !", "category": "expression", "frenchEquivalent": "pas du tout" },
-  { "id": "ecoeurant", "term": "Écœurant", "definition": "Selon le ton : excellent ou dégoûtant. Dit avec enthousiasme, c'est un compliment fort.", "example": "Ce concert-là était écœurant !", "category": "expression", "frenchEquivalent": "génial (ou infect)" },
-  { "id": "capoter", "term": "Capoter", "definition": "Perdre les pédales, s'emballer, être stupéfait. « Capoter ben raide » = complètement perdre la tête.", "example": "J'ai capoté quand j'ai vu le prix.", "category": "expression", "frenchEquivalent": "halluciner, péter un câble" },
-  { "id": "niaiser", "term": "Niaiser", "definition": "Se moquer, faire perdre du temps, glander. « Niaise-moi pas » = ne te fous pas de moi.", "example": "Arrête de niaiser, on va être en retard.", "category": "expression", "frenchEquivalent": "faire l'idiot, charrier" },
-  { "id": "tiguidou", "term": "Tiguidou", "definition": "Parfait, ça marche, c'est réglé.", "example": "On se rejoint à 19 h ? — Tiguidou !", "category": "expression", "frenchEquivalent": "nickel, ça roule" },
-  { "id": "avoir-de-la-broue", "term": "Avoir de la broue dans le toupet", "definition": "Être débordé, sous l'eau. Littéralement : avoir de la mousse dans la mèche de cheveux.", "example": "Cette semaine j'ai de la broue dans le toupet.", "category": "expression", "frenchEquivalent": "être débordé" },
-  { "id": "attache-ta-tuque", "term": "Attache ta tuque", "definition": "Accroche-toi, ça va secouer. La tuque est le bonnet d'hiver.", "example": "Attache ta tuque, on part en road trip demain.", "category": "expression", "frenchEquivalent": "accroche-toi" },
-  { "id": "tuque", "term": "Tuque", "definition": "Bonnet d'hiver. Non négociable de novembre à mars.", "example": "Sors pas sans ta tuque, il fait -20.", "category": "quotidien", "frenchEquivalent": "bonnet" },
-  { "id": "mitaines", "term": "Mitaines", "definition": "Moufles. Plus chaudes que les gants, parce que les doigts se réchauffent entre eux.", "example": "Les mitaines, c'est mieux que les gants à -25.", "category": "quotidien", "frenchEquivalent": "moufles" },
-  { "id": "poudrerie", "term": "Poudrerie", "definition": "Neige déjà tombée que le vent soulève et fait tourbillonner. Visibilité nulle sans qu'il neige.", "example": "Il neige pas, c'est de la poudrerie.", "category": "quotidien", "frenchEquivalent": "blizzard, neige soufflée" },
-  { "id": "slush", "term": "Sloche (slush)", "definition": "Mélange de neige fondue, de sel et de boue qui recouvre les trottoirs au dégel. Ennemi juré des chaussures en toile.", "example": "J'ai marché dans la sloche jusqu'aux chevilles.", "category": "quotidien", "frenchEquivalent": "neige fondue" },
-  { "id": "poutine", "term": "Poutine", "definition": "Frites, fromage en grains frais et sauce brune. Le fromage doit « couiner » sous la dent — sinon il n'est pas frais.", "example": "Une poutine classique, s'il vous plaît.", "category": "nourriture" },
-  { "id": "fromage-couic", "term": "Fromage qui couine", "definition": "Fromage en grains (cheddar frais du jour). Le couinement sous la dent est le test de fraîcheur.", "example": "Le fromage couine, c'est bon signe.", "category": "nourriture", "frenchEquivalent": "cheddar frais en grains" },
-  { "id": "guedille", "term": "Guedille", "definition": "Pain à hot-dog garni de salade de homard, de crevettes ou d'œufs. Classique des casse-croûte l'été.", "example": "Une guedille au homard sur la terrasse.", "category": "nourriture" },
-  { "id": "queue-de-castor", "term": "Queue de castor", "definition": "Pâte frite plate et allongée, saupoudrée de sucre et cannelle ou nappée de chocolat.", "example": "Une queue de castor après le patin.", "category": "nourriture", "frenchEquivalent": "beignet plat" },
-  { "id": "cabane-a-sucre", "term": "Cabane à sucre", "definition": "Érablière où l'on mange en mars-avril, à la saison des sucres. Repas copieux et tire d'érable sur la neige.", "example": "On va à la cabane à sucre en mars.", "category": "nourriture" },
-  { "id": "liqueur", "term": "Liqueur", "definition": "Soda, boisson gazeuse. Aucun alcool là-dedans — attention au malentendu.", "example": "Tu veux une liqueur avec ça ?", "category": "nourriture", "frenchEquivalent": "soda" },
-  { "id": "breuvage", "term": "Breuvage", "definition": "Toute boisson non alcoolisée servie au repas.", "example": "Quel breuvage avec votre repas ?", "category": "nourriture", "frenchEquivalent": "boisson" },
-  { "id": "deuxieme-tasse", "term": "Un p'tit vite", "definition": "Fait rapidement, à l'arrache. Peut décrire un travail bâclé comme un passage éclair.", "example": "Je fais juste un p'tit vite au dep.", "category": "expression", "frenchEquivalent": "vite fait" },
-  { "id": "stm", "term": "La STM", "definition": "Société de transport de Montréal : métro (4 lignes) et bus. La carte rechargeable s'appelle OPUS.", "example": "Recharge ta carte OPUS avant de descendre.", "category": "transport" },
-  { "id": "opus", "term": "Carte OPUS", "definition": "Carte à puce rechargeable du réseau. Titre 24 h, 3 jours ou mensuel selon la durée du séjour.", "example": "Un titre 3 jours sur l'OPUS, ça couvre le week-end.", "category": "transport", "frenchEquivalent": "Navigo" },
-  { "id": "bixi", "term": "BIXI", "definition": "Vélos en libre-service, d'avril à novembre. Version électrique disponible pour les côtes du Plateau.", "example": "On prend des BIXI jusqu'au canal ?", "category": "transport", "frenchEquivalent": "Vélib'" },
-  { "id": "correspondance", "term": "Correspondance", "definition": "Titre de transport valable 120 min sur bus et métro après validation.", "example": "Garde ta correspondance, elle est bonne 2 heures.", "category": "transport" },
-  { "id": "tabarnak", "term": "Tabarnak", "definition": "Sacre (juron) issu du vocabulaire religieux. Extrêmement vulgaire dans la bouche d'un étranger, banal entre proches. À comprendre, pas à utiliser la première semaine.", "example": "Tabarnak, il fait frette !", "category": "juron" },
-  { "id": "calisse", "term": "Câlisse / Câlice", "definition": "Autre sacre religieux. Se conjugue : « câlisser son camp » = ficher le camp.", "example": "Il a câlissé son camp sans rien dire.", "category": "juron" },
-  { "id": "esti", "term": "Esti / Ostie", "definition": "Sacre passe-partout, s'ajoute devant un nom comme intensificateur.", "example": "Un esti de bon film.", "category": "juron" },
-  { "id": "voyons-donc", "term": "Voyons donc !", "definition": "Marque l'incrédulité ou l'agacement. L'équivalent poli de tous les sacres ci-dessus.", "example": "Voyons donc, ça se peut pas !", "category": "expression", "frenchEquivalent": "n'importe quoi !" },
-  { "id": "bienvenue", "term": "Bienvenue", "definition": "Réponse à « merci », calquée sur l'anglais « you're welcome ». Pas un accueil.", "example": "Merci ! — Bienvenue !", "category": "anglicisme", "frenchEquivalent": "de rien, je t'en prie" },
-  { "id": "bonjour-hi", "term": "Bonjour-Hi", "definition": "Salutation bilingue des commerces du centre-ville. Réponds dans la langue de ton choix, elle fixe la suite de l'échange.", "example": "Bonjour-Hi ! — Bonjour !", "category": "anglicisme" },
-  { "id": "cute", "term": "C'est cute", "definition": "Mignon, adorable. Anglicisme totalement intégré, prononcé « kiout ».", "example": "Ton appart est vraiment cute.", "category": "anglicisme", "frenchEquivalent": "mignon" },
-  { "id": "checker", "term": "Checker", "definition": "Vérifier, regarder. Prononcé « tchéquer ».", "example": "Check ça, la vue depuis le belvédère.", "category": "anglicisme", "frenchEquivalent": "vérifier, mater" },
-  { "id": "toune", "term": "Toune", "definition": "Une chanson, un morceau. De l'anglais « tune ».", "example": "Mets une bonne toune pour la route.", "category": "anglicisme", "frenchEquivalent": "morceau, son" },
-  { "id": "frette", "term": "Frette", "definition": "Froid, mais en plus intense. Forme populaire de « froid ».", "example": "Il fait frette en tabarnak à matin.", "category": "expression", "frenchEquivalent": "glacial" },
-  { "id": "a-matin", "term": "À matin / à soir", "definition": "Ce matin, ce soir. Tournure populaire très répandue.", "example": "On se voit à soir ?", "category": "expression", "frenchEquivalent": "ce matin, ce soir" },
-  { "id": "asteure", "term": "Asteure", "definition": "Maintenant. Contraction de « à cette heure ».", "example": "Asteure qu'on est là, on fait quoi ?", "category": "expression", "frenchEquivalent": "maintenant" },
-  { "id": "pogner", "term": "Pogner", "definition": "Attraper, saisir, mais aussi avoir du succès. Verbe à tout faire.", "example": "J'ai pogné le dernier métro. · Sa toune pogne fort.", "category": "expression", "frenchEquivalent": "choper, cartonner" },
-  { "id": "achalandage", "term": "Achalandé", "definition": "Fréquenté, bondé. « Un resto ben achalandé » est un restaurant qui marche.", "example": "Le marché est achalandé le samedi matin.", "category": "quotidien", "frenchEquivalent": "fréquenté, plein de monde" },
-  { "id": "sous-sol", "term": "Cinq et demi (5 ½)", "definition": "Taille d'un logement : nombre de pièces, la demie étant la salle de bain. Un 5 ½ ≈ un T3.", "example": "On loue un 4 ½ dans le Plateau.", "category": "quotidien", "frenchEquivalent": "T3 (pour un 5 ½)" }
+  {
+    "id": "depanneur",
+    "term": "Dépanneur (dep)",
+    "definition": "Petite épicerie de quartier ouverte tard, souvent 24 h/24. On y trouve bière, cigarettes, lait et loterie.",
+    "example": "Je passe au dep chercher une pinte de lait.",
+    "category": "quotidien",
+    "frenchEquivalent": "épicerie de nuit, superette"
+  },
+  {
+    "id": "char",
+    "term": "Char",
+    "definition": "Une voiture. Rien à voir avec un char d'assaut.",
+    "example": "On prend mon char ou le métro ?",
+    "category": "transport",
+    "frenchEquivalent": "bagnole, caisse"
+  },
+  {
+    "id": "magasiner",
+    "term": "Magasiner",
+    "definition": "Faire du shopping, comparer avant d'acheter. Le nom correspondant est « magasinage ».",
+    "example": "Je vais magasiner des bottes d'hiver sur Sainte-Cath.",
+    "category": "quotidien",
+    "frenchEquivalent": "faire les magasins"
+  },
+  {
+    "id": "tantot",
+    "term": "Tantôt",
+    "definition": "Tout à l'heure — mais aussi bien dans le passé que dans le futur. Le contexte tranche.",
+    "example": "Je t'ai vu tantôt au parc. · On se voit tantôt !",
+    "category": "expression",
+    "frenchEquivalent": "tout à l'heure"
+  },
+  {
+    "id": "presentement",
+    "term": "Présentement",
+    "definition": "En ce moment. Beaucoup plus courant qu'en France, sans nuance soutenue.",
+    "example": "Il neige présentement.",
+    "category": "expression",
+    "frenchEquivalent": "actuellement"
+  },
+  {
+    "id": "chum",
+    "term": "Chum",
+    "definition": "Petit ami, ou copain proche selon le contexte. Au féminin : « blonde » pour la petite amie.",
+    "example": "Mon chum arrive de Québec en fin de semaine.",
+    "category": "quotidien",
+    "frenchEquivalent": "copain, mec"
+  },
+  {
+    "id": "blonde",
+    "term": "Blonde",
+    "definition": "Petite amie, quelle que soit la couleur de ses cheveux.",
+    "example": "Je te présente ma blonde, Camille.",
+    "category": "quotidien",
+    "frenchEquivalent": "copine"
+  },
+  {
+    "id": "fin-de-semaine",
+    "term": "Fin de semaine",
+    "definition": "Le week-end. L'anglicisme « week-end » est mal vu au Québec, qui défend le français plus fermement qu'en France.",
+    "example": "Qu'est-ce que tu fais en fin de semaine ?",
+    "category": "expression",
+    "frenchEquivalent": "week-end"
+  },
+  {
+    "id": "pantoute",
+    "term": "Pantoute",
+    "definition": "Pas du tout. Contraction de « pas en tout ».",
+    "example": "T'as pas aimé ? — Pantoute !",
+    "category": "expression",
+    "frenchEquivalent": "pas du tout"
+  },
+  {
+    "id": "ecoeurant",
+    "term": "Écœurant",
+    "definition": "Selon le ton : excellent ou dégoûtant. Dit avec enthousiasme, c'est un compliment fort.",
+    "example": "Ce concert-là était écœurant !",
+    "category": "expression",
+    "frenchEquivalent": "génial (ou infect)"
+  },
+  {
+    "id": "capoter",
+    "term": "Capoter",
+    "definition": "Perdre les pédales, s'emballer, être stupéfait. « Capoter ben raide » = complètement perdre la tête.",
+    "example": "J'ai capoté quand j'ai vu le prix.",
+    "category": "expression",
+    "frenchEquivalent": "halluciner, péter un câble"
+  },
+  {
+    "id": "niaiser",
+    "term": "Niaiser",
+    "definition": "Se moquer, faire perdre du temps, glander. « Niaise-moi pas » = ne te fous pas de moi.",
+    "example": "Arrête de niaiser, on va être en retard.",
+    "category": "expression",
+    "frenchEquivalent": "faire l'idiot, charrier"
+  },
+  {
+    "id": "tiguidou",
+    "term": "Tiguidou",
+    "definition": "Parfait, ça marche, c'est réglé.",
+    "example": "On se rejoint à 19 h ? — Tiguidou !",
+    "category": "expression",
+    "frenchEquivalent": "nickel, ça roule"
+  },
+  {
+    "id": "avoir-de-la-broue",
+    "term": "Avoir de la broue dans le toupet",
+    "definition": "Être débordé, sous l'eau. Littéralement : avoir de la mousse dans la mèche de cheveux.",
+    "example": "Cette semaine j'ai de la broue dans le toupet.",
+    "category": "expression",
+    "frenchEquivalent": "être débordé"
+  },
+  {
+    "id": "attache-ta-tuque",
+    "term": "Attache ta tuque",
+    "definition": "Accroche-toi, ça va secouer. La tuque est le bonnet d'hiver.",
+    "example": "Attache ta tuque, on part en road trip demain.",
+    "category": "expression",
+    "frenchEquivalent": "accroche-toi"
+  },
+  {
+    "id": "tuque",
+    "term": "Tuque",
+    "definition": "Bonnet d'hiver. Non négociable de novembre à mars.",
+    "example": "Sors pas sans ta tuque, il fait -20.",
+    "category": "quotidien",
+    "frenchEquivalent": "bonnet"
+  },
+  {
+    "id": "mitaines",
+    "term": "Mitaines",
+    "definition": "Moufles. Plus chaudes que les gants, parce que les doigts se réchauffent entre eux.",
+    "example": "Les mitaines, c'est mieux que les gants à -25.",
+    "category": "quotidien",
+    "frenchEquivalent": "moufles"
+  },
+  {
+    "id": "poudrerie",
+    "term": "Poudrerie",
+    "definition": "Neige déjà tombée que le vent soulève et fait tourbillonner. Visibilité nulle sans qu'il neige.",
+    "example": "Il neige pas, c'est de la poudrerie.",
+    "category": "quotidien",
+    "frenchEquivalent": "blizzard, neige soufflée"
+  },
+  {
+    "id": "slush",
+    "term": "Sloche (slush)",
+    "definition": "Mélange de neige fondue, de sel et de boue qui recouvre les trottoirs au dégel. Ennemi juré des chaussures en toile.",
+    "example": "J'ai marché dans la sloche jusqu'aux chevilles.",
+    "category": "quotidien",
+    "frenchEquivalent": "neige fondue"
+  },
+  {
+    "id": "poutine",
+    "term": "Poutine",
+    "definition": "Frites, fromage en grains frais et sauce brune. Le fromage doit « couiner » sous la dent — sinon il n'est pas frais.",
+    "example": "Une poutine classique, s'il vous plaît.",
+    "category": "nourriture"
+  },
+  {
+    "id": "fromage-couic",
+    "term": "Fromage qui couine",
+    "definition": "Fromage en grains (cheddar frais du jour). Le couinement sous la dent est le test de fraîcheur.",
+    "example": "Le fromage couine, c'est bon signe.",
+    "category": "nourriture",
+    "frenchEquivalent": "cheddar frais en grains"
+  },
+  {
+    "id": "guedille",
+    "term": "Guedille",
+    "definition": "Pain à hot-dog garni de salade de homard, de crevettes ou d'œufs. Classique des casse-croûte l'été.",
+    "example": "Une guedille au homard sur la terrasse.",
+    "category": "nourriture"
+  },
+  {
+    "id": "queue-de-castor",
+    "term": "Queue de castor",
+    "definition": "Pâte frite plate et allongée, saupoudrée de sucre et cannelle ou nappée de chocolat.",
+    "example": "Une queue de castor après le patin.",
+    "category": "nourriture",
+    "frenchEquivalent": "beignet plat"
+  },
+  {
+    "id": "cabane-a-sucre",
+    "term": "Cabane à sucre",
+    "definition": "Érablière où l'on mange en mars-avril, à la saison des sucres. Repas copieux et tire d'érable sur la neige.",
+    "example": "On va à la cabane à sucre en mars.",
+    "category": "nourriture"
+  },
+  {
+    "id": "liqueur",
+    "term": "Liqueur",
+    "definition": "Soda, boisson gazeuse. Aucun alcool là-dedans — attention au malentendu.",
+    "example": "Tu veux une liqueur avec ça ?",
+    "category": "nourriture",
+    "frenchEquivalent": "soda"
+  },
+  {
+    "id": "breuvage",
+    "term": "Breuvage",
+    "definition": "Toute boisson non alcoolisée servie au repas.",
+    "example": "Quel breuvage avec votre repas ?",
+    "category": "nourriture",
+    "frenchEquivalent": "boisson"
+  },
+  {
+    "id": "deuxieme-tasse",
+    "term": "Un p'tit vite",
+    "definition": "Fait rapidement, à l'arrache. Peut décrire un travail bâclé comme un passage éclair.",
+    "example": "Je fais juste un p'tit vite au dep.",
+    "category": "expression",
+    "frenchEquivalent": "vite fait"
+  },
+  {
+    "id": "stm",
+    "term": "La STM",
+    "definition": "Société de transport de Montréal : métro (4 lignes) et bus. La carte rechargeable s'appelle OPUS.",
+    "example": "Recharge ta carte OPUS avant de descendre.",
+    "category": "transport"
+  },
+  {
+    "id": "opus",
+    "term": "Carte OPUS",
+    "definition": "Carte à puce rechargeable du réseau. Titre 24 h, 3 jours ou mensuel selon la durée du séjour.",
+    "example": "Un titre 3 jours sur l'OPUS, ça couvre le week-end.",
+    "category": "transport",
+    "frenchEquivalent": "Navigo"
+  },
+  {
+    "id": "bixi",
+    "term": "BIXI",
+    "definition": "Vélos en libre-service, d'avril à novembre. Version électrique disponible pour les côtes du Plateau.",
+    "example": "On prend des BIXI jusqu'au canal ?",
+    "category": "transport",
+    "frenchEquivalent": "Vélib'"
+  },
+  {
+    "id": "correspondance",
+    "term": "Correspondance",
+    "definition": "Titre de transport valable 120 min sur bus et métro après validation.",
+    "example": "Garde ta correspondance, elle est bonne 2 heures.",
+    "category": "transport"
+  },
+  {
+    "id": "tabarnak",
+    "term": "Tabarnak",
+    "definition": "Sacre (juron) issu du vocabulaire religieux. Extrêmement vulgaire dans la bouche d'un étranger, banal entre proches. À comprendre, pas à utiliser la première semaine.",
+    "example": "Tabarnak, il fait frette !",
+    "category": "juron"
+  },
+  {
+    "id": "calisse",
+    "term": "Câlisse / Câlice",
+    "definition": "Autre sacre religieux. Se conjugue : « câlisser son camp » = ficher le camp.",
+    "example": "Il a câlissé son camp sans rien dire.",
+    "category": "juron"
+  },
+  {
+    "id": "esti",
+    "term": "Esti / Ostie",
+    "definition": "Sacre passe-partout, s'ajoute devant un nom comme intensificateur.",
+    "example": "Un esti de bon film.",
+    "category": "juron"
+  },
+  {
+    "id": "voyons-donc",
+    "term": "Voyons donc !",
+    "definition": "Marque l'incrédulité ou l'agacement. L'équivalent poli de tous les sacres ci-dessus.",
+    "example": "Voyons donc, ça se peut pas !",
+    "category": "expression",
+    "frenchEquivalent": "n'importe quoi !"
+  },
+  {
+    "id": "bienvenue",
+    "term": "Bienvenue",
+    "definition": "Réponse à « merci », calquée sur l'anglais « you're welcome ». Pas un accueil.",
+    "example": "Merci ! — Bienvenue !",
+    "category": "anglicisme",
+    "frenchEquivalent": "de rien, je t'en prie"
+  },
+  {
+    "id": "bonjour-hi",
+    "term": "Bonjour-Hi",
+    "definition": "Salutation bilingue des commerces du centre-ville. Réponds dans la langue de ton choix, elle fixe la suite de l'échange.",
+    "example": "Bonjour-Hi ! — Bonjour !",
+    "category": "anglicisme"
+  },
+  {
+    "id": "cute",
+    "term": "C'est cute",
+    "definition": "Mignon, adorable. Anglicisme totalement intégré, prononcé « kiout ».",
+    "example": "Ton appart est vraiment cute.",
+    "category": "anglicisme",
+    "frenchEquivalent": "mignon"
+  },
+  {
+    "id": "checker",
+    "term": "Checker",
+    "definition": "Vérifier, regarder. Prononcé « tchéquer ».",
+    "example": "Check ça, la vue depuis le belvédère.",
+    "category": "anglicisme",
+    "frenchEquivalent": "vérifier, mater"
+  },
+  {
+    "id": "toune",
+    "term": "Toune",
+    "definition": "Une chanson, un morceau. De l'anglais « tune ».",
+    "example": "Mets une bonne toune pour la route.",
+    "category": "anglicisme",
+    "frenchEquivalent": "morceau, son"
+  },
+  {
+    "id": "frette",
+    "term": "Frette",
+    "definition": "Froid, mais en plus intense. Forme populaire de « froid ».",
+    "example": "Il fait frette en tabarnak à matin.",
+    "category": "expression",
+    "frenchEquivalent": "glacial"
+  },
+  {
+    "id": "a-matin",
+    "term": "À matin / à soir",
+    "definition": "Ce matin, ce soir. Tournure populaire très répandue.",
+    "example": "On se voit à soir ?",
+    "category": "expression",
+    "frenchEquivalent": "ce matin, ce soir"
+  },
+  {
+    "id": "asteure",
+    "term": "Asteure",
+    "definition": "Maintenant. Contraction de « à cette heure ».",
+    "example": "Asteure qu'on est là, on fait quoi ?",
+    "category": "expression",
+    "frenchEquivalent": "maintenant"
+  },
+  {
+    "id": "pogner",
+    "term": "Pogner",
+    "definition": "Attraper, saisir, mais aussi avoir du succès. Verbe à tout faire.",
+    "example": "J'ai pogné le dernier métro. · Sa toune pogne fort.",
+    "category": "expression",
+    "frenchEquivalent": "choper, cartonner"
+  },
+  {
+    "id": "achalandage",
+    "term": "Achalandé",
+    "definition": "Fréquenté, bondé. « Un resto ben achalandé » est un restaurant qui marche.",
+    "example": "Le marché est achalandé le samedi matin.",
+    "category": "quotidien",
+    "frenchEquivalent": "fréquenté, plein de monde"
+  },
+  {
+    "id": "sous-sol",
+    "term": "Cinq et demi (5 ½)",
+    "definition": "Taille d'un logement : nombre de pièces, la demie étant la salle de bain. Un 5 ½ ≈ un T3.",
+    "example": "On loue un 4 ½ dans le Plateau.",
+    "category": "quotidien",
+    "frenchEquivalent": "T3 (pour un 5 ½)"
+  },
+  {
+    "id": "cv-quebecois",
+    "term": "CV québécois",
+    "definition": "Pas de photo, pas d'âge, pas de situation familiale — les mentionner est un signal d'amateurisme et expose l'employeur à un risque de discrimination. Deux pages maximum.",
+    "example": "J'ai enlevé ma photo de mon CV avant de postuler.",
+    "category": "travail",
+    "frenchEquivalent": "CV (mais avec photo en France)"
+  },
+  {
+    "id": "lettre-presentation",
+    "term": "Lettre de présentation",
+    "definition": "La lettre de motivation. Attendue, courte, et adressée à une personne quand c'est possible.",
+    "example": "Joins ta lettre de présentation au courriel.",
+    "category": "travail",
+    "frenchEquivalent": "lettre de motivation"
+  },
+  {
+    "id": "postuler-sur",
+    "term": "Appliquer sur un poste",
+    "definition": "Postuler à une offre. Calque de l'anglais « to apply », totalement courant à l'oral.",
+    "example": "J'ai appliqué sur trois postes cette semaine.",
+    "category": "travail",
+    "frenchEquivalent": "postuler à"
+  },
+  {
+    "id": "salaire-annuel",
+    "term": "Salaire annuel brut",
+    "definition": "Toujours annoncé à l'année et en brut, jamais au mois. Un « 85 K » signifie 85 000 $ par an.",
+    "example": "Le poste est affiché à 85 K.",
+    "category": "travail"
+  },
+  {
+    "id": "reer",
+    "term": "REER",
+    "definition": "Régime enregistré d'épargne-retraite. Souvent abondé par l'employeur : c'est un élément de négociation à part entière.",
+    "example": "Ils cotisent 5 % au REER.",
+    "category": "travail",
+    "frenchEquivalent": "proche du PER"
+  },
+  {
+    "id": "assurance-collective",
+    "term": "Assurance collective",
+    "definition": "Mutuelle santé d'entreprise. Essentielle : sans elle, dentiste et lunettes sont intégralement à ta charge.",
+    "example": "L'assurance collective commence après trois mois.",
+    "category": "travail",
+    "frenchEquivalent": "mutuelle"
+  },
+  {
+    "id": "periode-probation",
+    "term": "Période de probation",
+    "definition": "Période d'essai, souvent trois mois. Le licenciement y est libre de part et d'autre.",
+    "example": "Je suis encore en probation jusqu'en mars.",
+    "category": "travail",
+    "frenchEquivalent": "période d'essai"
+  },
+  {
+    "id": "temps-plein",
+    "term": "Temps plein",
+    "definition": "Généralement 37,5 à 40 h par semaine. Il n'existe pas d'équivalent des 35 h.",
+    "example": "C'est un temps plein, 37,5 h.",
+    "category": "travail"
+  },
+  {
+    "id": "vacances",
+    "term": "Vacances",
+    "definition": "Deux semaines par an au départ, c'est la norme légale. Trois après quelques années. Le choc est réel en venant de France.",
+    "example": "J'ai deux semaines de vacances la première année.",
+    "category": "travail",
+    "frenchEquivalent": "congés payés (5 semaines en France)"
+  },
+  {
+    "id": "boss",
+    "term": "Boss / patron",
+    "definition": "Le supérieur direct. Le tutoiement est la norme, y compris avec la direction.",
+    "example": "Je vais en parler à mon boss.",
+    "category": "travail"
+  },
+  {
+    "id": "jaser",
+    "term": "Jaser",
+    "definition": "Discuter, bavarder. Sans connotation négative, contrairement à « jaser » en France.",
+    "example": "On jase de ça demain en réunion.",
+    "category": "expression",
+    "frenchEquivalent": "discuter"
+  },
+  {
+    "id": "faire-du-pouce",
+    "term": "Faire du pouce",
+    "definition": "Faire de l'auto-stop. Aussi, au figuré : rebondir sur l'idée de quelqu'un.",
+    "example": "Je fais du pouce sur ce que tu viens de dire.",
+    "category": "expression",
+    "frenchEquivalent": "rebondir sur"
+  },
+  {
+    "id": "cedule",
+    "term": "Cédule / céduler",
+    "definition": "Planning, planifier. De l'anglais « schedule ».",
+    "example": "On cédule un appel jeudi ?",
+    "category": "anglicisme",
+    "frenchEquivalent": "planifier"
+  },
+  {
+    "id": "fitter",
+    "term": "Fitter",
+    "definition": "Convenir, s'intégrer. Très utilisé en recrutement pour parler d'adéquation culturelle.",
+    "example": "Ton profil fitte bien avec l'équipe.",
+    "category": "anglicisme",
+    "frenchEquivalent": "correspondre"
+  },
+  {
+    "id": "plate",
+    "term": "C'est plate",
+    "definition": "C'est ennuyeux, ou c'est dommage. Extrêmement courant.",
+    "example": "Il pleut, c'est plate.",
+    "category": "expression",
+    "frenchEquivalent": "c'est nul / dommage"
+  },
+  {
+    "id": "bienvenue-quebec",
+    "term": "Sans-faute",
+    "definition": "Sans faute, obligatoirement. Souvent employé pour confirmer un rendez-vous.",
+    "example": "On se voit lundi sans-faute.",
+    "category": "expression"
+  }
 ]

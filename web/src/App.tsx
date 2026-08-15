@@ -1,9 +1,11 @@
 /**
  * Routage et garde d'accès.
  *
- * Tout le contenu est derrière l'authentification : le journal photo montre le
- * logement, les habitudes et les enfants de la famille. Rien ne doit être
- * indexable ni accessible par URL devinée.
+ * Application mono-utilisateur : une seule adresse entre. Trois états
+ * distincts, à ne pas confondre — non connecté, connecté mais non autorisé,
+ * et autorisé. Le deuxième mérite un message explicite : quelqu'un qui s'est
+ * authentifié avec le mauvais compte Google doit comprendre pourquoi il ne
+ * voit rien, plutôt que de tomber sur un écran vide.
  */
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
@@ -11,39 +13,51 @@ import { useAuth } from './contexts/AuthContext';
 import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { More } from './pages/More';
-import { Admin } from './pages/Admin';
-import { Journal } from './features/journal/Journal';
 import { TaxCalculator } from './features/taxes/TaxCalculator';
 import { Checklist } from './features/checklist/Checklist';
 import { Spots } from './features/spots/Spots';
 import { Weather } from './features/weather/Weather';
 import { Lexicon } from './features/lexicon/Lexicon';
 import { DualClock } from './features/clock/DualClock';
+import { Applications } from './features/jobs/Applications';
 
-function Splash({ message }: { message: string }): JSX.Element {
+function Splash({ message, action }: { message: string; action?: JSX.Element }): JSX.Element {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-ink-900 text-frost/50">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-ink-900 px-8 text-center text-frost/50">
       <div className="text-4xl">🍁</div>
-      <p className="text-sm">{message}</p>
+      <p className="max-w-xs text-sm leading-relaxed">{message}</p>
+      {action}
     </div>
   );
 }
 
 export function App(): JSX.Element {
-  const { user, role, loading } = useAuth();
+  const { user, authorized, loading, logout } = useAuth();
 
   if (loading) return <Splash message="Ouverture du carnet…" />;
   if (!user) return <Login />;
 
-  if (role === 'blocked') {
-    return <Splash message="Ton accès a été suspendu. Contacte Seb si c’est une erreur." />;
+  if (!authorized) {
+    return (
+      <Splash
+        message={`Le compte ${user.email ?? ''} n’a pas accès à cette application. Elle est réservée à un seul utilisateur.`}
+        action={
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="rounded-xl bg-white/10 px-5 py-2.5 text-sm text-frost"
+          >
+            Changer de compte
+          </button>
+        }
+      />
+    );
   }
 
   return (
     <Routes>
       <Route element={<AppShell />}>
         <Route index element={<Home />} />
-        <Route path="journal" element={<Journal />} />
         <Route path="taxes" element={<TaxCalculator />} />
         <Route path="spots" element={<Spots />} />
         <Route path="plus" element={<More />} />
@@ -51,7 +65,7 @@ export function App(): JSX.Element {
         <Route path="meteo" element={<Weather />} />
         <Route path="lexique" element={<Lexicon />} />
         <Route path="horloge" element={<DualClock />} />
-        <Route path="admin" element={role === 'admin' ? <Admin /> : <Navigate to="/" replace />} />
+        <Route path="embauche" element={<Applications />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
