@@ -30,6 +30,8 @@ export interface TripConfig {
   name: string;
   departureDate: string; // AAAA-MM-JJ
   returnDate: string;
+  /** Échéance que l on se fixe pour décider de rester ou de rentrer. */
+  decisionDate?: string;
   homeTimeZone: string; // ex. Europe/Paris
   tripTimeZone: string; // ex. America/Montreal
 }

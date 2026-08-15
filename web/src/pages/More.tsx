@@ -4,6 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { getConfig } from '../lib/runtimeConfig';
 
 const LINKS = [
+  { to: '/logement', icon: '🏠', label: 'Logement', hint: 'Visites, loyers, clause animaux' },
+  { to: '/salaire', icon: '🧮', label: 'Salaire net', hint: 'Brut annuel → net mensuel' },
+  { to: '/embauche', icon: '💼', label: 'Embauche', hint: 'Candidatures & entretiens' },
+  { to: '/taxes', icon: '💵', label: 'Taxes & pourboires', hint: 'TPS + TVQ au restaurant' },
   { to: '/checklist', icon: '✅', label: 'Check & Sync', hint: 'Timeline de préparation' },
   { to: '/meteo', icon: '🌡', label: 'Météo ressentie', hint: 'Humidex, vent, quoi faire' },
   { to: '/lexique', icon: '🗣', label: 'Argot québécois', hint: 'Lexique et exemples' },

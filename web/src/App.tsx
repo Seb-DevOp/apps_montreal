@@ -20,6 +20,9 @@ import { Weather } from './features/weather/Weather';
 import { Lexicon } from './features/lexicon/Lexicon';
 import { DualClock } from './features/clock/DualClock';
 import { Applications } from './features/jobs/Applications';
+import { Settling } from './features/settling/Settling';
+import { SalaryCalculator } from './features/salary/SalaryCalculator';
+import { Housing } from './features/housing/Housing';
 
 function Splash({ message, action }: { message: string; action?: JSX.Element }): JSX.Element {
   return (
@@ -66,6 +69,9 @@ export function App(): JSX.Element {
         <Route path="lexique" element={<Lexicon />} />
         <Route path="horloge" element={<DualClock />} />
         <Route path="embauche" element={<Applications />} />
+        <Route path="installation" element={<Settling />} />
+        <Route path="salaire" element={<SalaryCalculator />} />
+        <Route path="logement" element={<Housing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

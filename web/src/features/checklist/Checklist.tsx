@@ -14,6 +14,7 @@ import {
   doc,
   onSnapshot,
   orderBy,
+  where,
   query,
   serverTimestamp,
   updateDoc,
@@ -55,7 +56,9 @@ function useTasks(): { tasks: Task[]; loading: boolean } {
 
   useEffect(() => {
     return onSnapshot(
-      query(collection(db(), 'tasks'), orderBy('offsetDays', 'desc')),
+      // La phase 'installation' a son propre écran : les deux calendriers ne
+      // se mélangent pas.
+      query(collection(db(), 'tasks'), where('phase', '==', 'depart'), orderBy('offsetDays', 'desc')),
       (snapshot) => {
         setTasks(snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Task));
         setLoading(false);

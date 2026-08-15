@@ -61,6 +61,11 @@ async function main() {
       name: 'Montréal',
       departureDate,
       returnDate,
+      // Expatriation : la date de retour n'est plus structurante. Le repère
+      // utile est l'échéance que l'on se fixe pour décider de rester ou non.
+      decisionDate: new Date(Date.parse(departureDate + 'T00:00:00Z') + 365 * 86400000)
+        .toISOString()
+        .slice(0, 10),
       homeTimeZone: 'Europe/Paris',
       tripTimeZone: 'America/Montreal',
       updatedAt: FieldValue.serverTimestamp(),
@@ -76,10 +81,22 @@ async function main() {
 
   await seedCollection('tasks', readSeed('tasks'), (task) => ({
     ...task,
+    phase: 'depart',
     notes: null,
     // `done` n'est réécrit qu'en mode --force : sans ça, une tâche déjà cochée
     // dans l'app serait décochée à chaque réexécution du seed.
     ...(force ? { done: false, doneAt: null } : {}),
+    source: 'manual',
+    labels: [],
+    createdAt: FieldValue.serverTimestamp(),
+  }));
+
+  // Démarches postérieures à l'arrivée : même collection, autre phase, et
+  // offsetDays compté APRÈS l'arrivée et non avant le départ.
+  await seedCollection('tasks', readSeed('settling'), (task) => ({
+    ...task,
+    phase: 'installation',
+    notes: task.notes ?? null,
     source: 'manual',
     labels: [],
     createdAt: FieldValue.serverTimestamp(),

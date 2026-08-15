@@ -19,7 +19,7 @@ interface Tab {
 const TABS: Tab[] = [
   { to: '/', label: 'Accueil', icon: '🏠' },
   { to: '/embauche', label: 'Embauche', icon: '💼' },
-  { to: '/taxes', label: 'Taxes', icon: '💵' },
+  { to: '/installation', label: 'Installation', icon: '🧭' },
   { to: '/spots', label: 'Spots', icon: '📍' },
   { to: '/plus', label: 'Plus', icon: '⋯' },
 ];
@@ -34,7 +34,9 @@ const TITLES: Record<string, string> = {
   '/lexique': 'Argot québécois',
   '/horloge': 'Double horloge',
   '/embauche': 'Embauche',
-  '/admin': 'Administration',
+  '/installation': 'Installation',
+  '/salaire': 'Salaire net',
+  '/logement': 'Logement',
 };
 
 export function AppShell(): JSX.Element {

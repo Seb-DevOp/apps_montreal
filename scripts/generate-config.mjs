@@ -196,6 +196,12 @@ const config = {
     name: 'Montréal',
     departureDate: process.env.TRIP_DEPARTURE_DATE || '2026-10-12',
     returnDate: process.env.TRIP_RETURN_DATE || '2026-10-26',
+    // Expatriation : repère de décision à un an, plutôt qu'une date de retour.
+    decisionDate: new Date(
+      Date.parse((process.env.TRIP_DEPARTURE_DATE || '2026-10-12') + 'T00:00:00Z') + 365 * 86400000,
+    )
+      .toISOString()
+      .slice(0, 10),
     homeTimeZone: 'Europe/Paris',
     tripTimeZone: 'America/Montreal',
   },
