@@ -628,3 +628,71 @@ que pas de bouton.
 
 La bannière est reportable de 14 jours : personne n'a envie d'être harcelé par une PWA de
 voyage.
+
+## 10. APK Android
+
+La PWA est aussi empaquetée en **APK**, via une *Trusted Web Activity* construite par
+Bubblewrap : une application Android qui affiche le site en plein écran, sans barre
+d'adresse, avec une icône dans le tiroir d'applications.
+
+L'APK n'est qu'une coquille — c'est le site qui porte le contenu. **Il ne se réinstalle
+donc pas à chaque évolution** : les mises à jour arrivent comme sur le web.
+
+### La contrainte qui gouverne tout
+
+**Une TWA fige son origine.** Elle est inscrite dans l'APK et vérifiée par les *Digital
+Asset Links*. Un APK construit contre `<projet>.web.app` deviendrait définitivement
+inutilisable à la première migration trimestrielle — précisément ce que toute
+l'architecture évite.
+
+[`scripts/android.mjs`](scripts/android.mjs) refuse donc de générer un manifeste si
+`STABLE_DOMAIN` est vide, pointe sur une URL Firebase, ou ne répond pas encore en HTTPS.
+
+### Mise en place
+
+```bash
+# 1. Prérequis : le domaine stable doit être raccordé à Firebase Hosting
+npm run dns:verify -- <valeur TXT de la console>
+npm run dns:setup
+
+# 2. Clé de signature — une seule fois, à conserver précieusement
+#    (renseigne d'abord ANDROID_KEY_PASSWORD et ANDROID_STORE_PASSWORD dans .env)
+npm run android:keystore
+
+# 3. Déclarer l'app dans Firebase : il publiera assetlinks.json tout seul
+npm run android:register
+#    puis redéployer le site pour que le fichier soit servi
+
+# 4. Construire
+npm run android:release        # manifeste + APK signé
+```
+
+### Publication
+
+Le workflow [`android.yml`](.github/workflows/android.yml) construit l'APK et l'attache à
+une **GitHub Release** — lien direct, permanent, versionné, gratuit. Déclenché par un tag
+`v*` ou à la main. Jamais sur push : un APK se distribue, il ne se régénère pas à chaque
+commit.
+
+Secrets requis :
+
+| Secret | Contenu |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 android/keystore.jks` |
+| `ANDROID_KEY_PASSWORD` | mot de passe de la clé |
+| `ANDROID_STORE_PASSWORD` | mot de passe du magasin |
+
+### Ce que la clé engage
+
+La clé de signature est **irremplaçable** : Android refuse d'installer une mise à jour
+signée différemment. La perdre oblige tous les utilisateurs à désinstaller puis
+réinstaller. Elle est exclue de git ; sauvegarde-la hors du dépôt.
+
+Le `packageId` est tout aussi définitif — le changer produit une application distincte,
+qui s'installera *à côté* de l'ancienne au lieu de la remplacer.
+
+### Et sur iPhone
+
+Aucun équivalent : iOS n'autorise pas l'installation hors App Store. Les utilisateurs
+iPhone passent par *Partager → Sur l'écran d'accueil*, ce que l'app leur explique
+d'elle-même.

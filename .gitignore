@@ -37,3 +37,18 @@ Thumbs.db
 # Build artefacts PWA
 web/dev-dist/
 web/public/config.json
+
+# Android / TWA
+# La clé de signature ne doit JAMAIS être commitée : quiconque la possède peut
+# publier une mise à jour qu'Android installera par-dessus la tienne.
+android/keystore.jks
+android/*.keystore
+android/app/
+android/build/
+android/.gradle/
+android/*.apk
+android/*.aab
+android/*.idsig
+android/gradle*
+android/local.properties
+android/twa-manifest.json

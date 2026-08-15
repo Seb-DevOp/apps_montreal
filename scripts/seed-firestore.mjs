@@ -15,8 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, getDb } from './lib/admin-app.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const force = process.argv.includes('--force');
@@ -27,9 +26,7 @@ if (!projectId) {
   process.exit(1);
 }
 
-initializeApp({ credential: applicationDefault(), projectId });
-const db = getFirestore();
-db.settings({ ignoreUndefinedProperties: true });
+const db = getDb(projectId);
 
 const readSeed = (name) => JSON.parse(readFileSync(join(ROOT, 'seed', `${name}.json`), 'utf8'));
 

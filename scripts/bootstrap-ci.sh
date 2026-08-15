@@ -220,6 +220,39 @@ printf '{\n  "projects": {\n    "default": "%s"\n  }\n}\n' "$GCP_PROJECT_ID" > .
 ok ".firebaserc écrit"
 
 # =============================================================================
+# 3 bis. Firebase Authentication
+#
+# Activer l'API identitytoolkit ne suffit pas : tant qu'Identity Platform n'a
+# pas été initialisé pour le projet, toute opération Auth échoue sur un
+# « There is no configuration corresponding to the provided identifier »
+# parfaitement opaque. La console le fait au premier clic sur « Commencer » ;
+# on le fait ici pour que la migration trimestrielle reste automatique.
+# =============================================================================
+
+step "Firebase Authentication"
+
+auth_token="$(gcloud auth print-access-token 2>/dev/null || true)"
+auth_headers=(-H "Authorization: Bearer ${auth_token}" -H "x-goog-user-project: ${GCP_PROJECT_ID}")
+
+curl -s -X POST "${auth_headers[@]}" -H "Content-Type: application/json" -d '{}' \
+  "https://identitytoolkit.googleapis.com/v2/projects/${GCP_PROJECT_ID}/identityPlatform:initializeAuth" \
+  >/dev/null 2>&1 || true
+
+# Le fournisseur e-mail / mot de passe s'active entièrement par API. Google,
+# lui, réclame un client OAuth que seule la console sait provisionner.
+if curl -sf -X PATCH "${auth_headers[@]}" -H "Content-Type: application/json" \
+     -d '{"signIn":{"email":{"enabled":true,"passwordRequired":true}}}' \
+     "https://identitytoolkit.googleapis.com/admin/v2/projects/${GCP_PROJECT_ID}/config?updateMask=signIn.email" \
+     >/dev/null 2>&1; then
+  ok "connexion e-mail / mot de passe activée"
+else
+  warn "Activation e-mail/mot de passe impossible — à faire dans la console."
+fi
+
+info "Connexion Google : à activer une fois dans la console (client OAuth requis)"
+info "  https://console.firebase.google.com/project/${GCP_PROJECT_ID}/authentication/providers"
+
+# =============================================================================
 # 4. Bucket d'état Terraform
 #
 # Volontairement HORS Terraform : un état qui se détruit lui-même au `destroy`

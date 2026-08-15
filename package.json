@@ -13,6 +13,12 @@
     "deploy": "node scripts/run-sh.mjs deploy.sh",
     "deploy:app": "node scripts/run-sh.mjs deploy.sh --app-only",
     "migrate": "node scripts/run-sh.mjs deploy.sh --migrate",
+    "android:keystore": "node --env-file-if-exists=.env scripts/android.mjs keystore",
+    "android:manifest": "node --env-file-if-exists=.env scripts/android.mjs manifest",
+    "android:fingerprint": "node --env-file-if-exists=.env scripts/android.mjs fingerprint",
+    "android:register": "node --env-file-if-exists=.env scripts/android.mjs register",
+    "android:build": "node --env-file-if-exists=.env scripts/android.mjs build",
+    "android:release": "node --env-file-if-exists=.env scripts/android.mjs release",
     "dns:show": "node --env-file-if-exists=.env scripts/duckdns-update.mjs show",
     "dns:setup": "node --env-file-if-exists=.env scripts/duckdns-update.mjs setup",
     "dns:verify": "node --env-file-if-exists=.env scripts/duckdns-update.mjs verify",
@@ -27,5 +33,10 @@
     "typecheck": "npm --prefix api run typecheck && npm --prefix web run typecheck",
     "build": "node scripts/generate-icons.mjs && npm --prefix api run build && npm --prefix web run build",
     "rules": "npx --yes firebase-tools@13 deploy --only firestore:rules,storage"
+  },
+  "devDependencies": {
+    "@google-cloud/firestore": "^7.11.0",
+    "firebase-admin": "^12.7.0",
+    "google-auth-library": "^9.15.0"
   }
 }

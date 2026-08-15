@@ -12,9 +12,8 @@
  *
  * Le compte doit déjà exister (s'être connecté au moins une fois).
  */
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, getDb, initAdminApp } from './lib/admin-app.mjs';
 
 // À défaut d'argument, on retombe sur ADMIN_EMAIL — ce qui rend
 // `npm run admin` utilisable tel quel, sans répéter l'adresse.
@@ -33,7 +32,7 @@ if (!['admin', 'guest', 'blocked'].includes(role)) {
 }
 
 const projectId = process.env.GOOGLE_CLOUD_PROJECT ?? process.env.GCP_PROJECT_ID;
-initializeApp({ credential: applicationDefault(), projectId });
+await initAdminApp(projectId);
 
 try {
   const user = await getAuth().getUserByEmail(email);
@@ -43,7 +42,7 @@ try {
   // La révocation rend le changement immédiat.
   await getAuth().revokeRefreshTokens(user.uid);
 
-  await getFirestore()
+  await getDb(projectId)
     .collection('users')
     .doc(user.uid)
     .set(

@@ -447,8 +447,12 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           sa_key: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Installer firebase-admin
-        run: npm install --no-save firebase-admin@12
+      - name: Installer les dépendances des scripts
+        # Déclarées dans le package.json racine plutôt qu'installées à la
+        # volée : scripts/lib/admin-app.mjs importe directement
+        # @google-cloud/firestore et google-auth-library, qui doivent donc
+        # figurer dans le manifeste comme n'importe quelle dépendance.
+        run: npm ci
 
       - name: Injecter le contenu de référence
         # Idempotent (écritures en merge), mais inutile à chaque commit : on ne

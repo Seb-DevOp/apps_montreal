@@ -1,0 +1,174 @@
+# =============================================================================
+# APK Android — Montréal Compagnon
+#
+# Construit une Trusted Web Activity autour de la PWA et publie l'APK signé
+# dans une GitHub Release. Le lien de la Release est direct et permanent :
+# c'est ce qu'on envoie aux proches, éventuellement sous forme de QR code.
+#
+# Déclenchement manuel, ou sur un tag `v*`. Jamais sur push : un APK se
+# distribue, il ne se régénère pas à chaque commit.
+#
+# ⚠ L'APK fige l'origine du site. Il vise STABLE_DOMAIN, jamais l'URL
+#   `<projet>.web.app` — celle-ci change à chaque migration trimestrielle et
+#   rendrait l'application installée définitivement inutilisable.
+# =============================================================================
+
+name: APK Android
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version affichée (ex. 1.0.0)'
+        type: string
+        required: false
+        default: '1.0.0'
+      version_code:
+        description: 'Code de version — doit croître à chaque publication'
+        type: string
+        required: false
+        default: '1'
+
+concurrency:
+  group: android
+  cancel-in-progress: false
+
+permissions:
+  contents: write # nécessaire pour créer la Release
+  id-token: write
+
+jobs:
+  build:
+    name: Construire et publier l'APK
+    runs-on: ubuntu-latest
+    env:
+      STABLE_DOMAIN: ${{ vars.STABLE_DOMAIN }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      ANDROID_PACKAGE_ID: ${{ vars.ANDROID_PACKAGE_ID || 'org.duckdns.appsmontreal.twa' }}
+      ANDROID_KEY_ALIAS: ${{ vars.ANDROID_KEY_ALIAS || 'montreal' }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+      ANDROID_VERSION_NAME: ${{ inputs.version_name || github.ref_name }}
+      # Le code de version doit croître strictement : Android refuse
+      # d'installer un APK dont le code est inférieur à celui déjà présent.
+      # Le numéro de run fait un compteur monotone acceptable.
+      ANDROID_VERSION_CODE: ${{ inputs.version_code || github.run_number }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier la configuration
+        run: |
+          missing=0
+          if [ -z "$STABLE_DOMAIN" ]; then
+            echo "::error::La variable STABLE_DOMAIN est requise : une TWA fige son origine."
+            missing=1
+          fi
+          case "$STABLE_DOMAIN" in
+            *.web.app|*.firebaseapp.com)
+              echo "::error::STABLE_DOMAIN pointe sur une URL liée au projet Firebase."
+              echo "::error::Elle change à chaque migration : l'APK deviendrait inutilisable."
+              missing=1
+              ;;
+          esac
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "::error::Le secret ANDROID_KEYSTORE_BASE64 est absent."
+            echo "::error::Génère la clé en local (npm run android:keystore) puis :"
+            echo "::error::  base64 -w0 android/keystore.jks | gh secret set ANDROID_KEYSTORE_BASE64"
+            missing=1
+          fi
+          exit "$missing"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Restaurer la clé de signature
+        run: |
+          mkdir -p android
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/keystore.jks
+          echo "Clé restaurée ($(stat -c%s android/keystore.jks) octets)."
+
+      - name: Configurer Bubblewrap
+        run: |
+          # Bubblewrap cherche un JDK et un SDK Android déclarés dans son
+          # fichier de configuration ; sans lui, il tente un téléchargement
+          # interactif qui ne peut pas aboutir sur un runner.
+          mkdir -p ~/.bubblewrap
+          cat > ~/.bubblewrap/config.json <<EOF
+          {
+            "jdkPath": "${JAVA_HOME}",
+            "androidSdkPath": "${ANDROID_HOME}"
+          }
+          EOF
+          cat ~/.bubblewrap/config.json
+
+      - name: Générer le manifeste TWA
+        run: node scripts/android.mjs manifest
+
+      - name: Construire l'APK signé
+        run: node scripts/android.mjs build
+
+      - name: Renommer l'artefact
+        id: artifact
+        run: |
+          name="montreal-compagnon-${ANDROID_VERSION_NAME}.apk"
+          mv android/app-release-signed.apk "$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "size=$(du -h "$name" | cut -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: ${{ steps.artifact.outputs.name }}
+          retention-days: 90
+
+      - name: Publier la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', env.ANDROID_VERSION_NAME) }}
+          name: Montréal Compagnon ${{ env.ANDROID_VERSION_NAME }}
+          files: ${{ steps.artifact.outputs.name }}
+          generate_release_notes: true
+          body: |
+            ## Installation sur Android
+
+            1. Télécharge `${{ steps.artifact.outputs.name }}` ci-dessous
+            2. Ouvre le fichier ; Android demandera d'autoriser l'installation
+               depuis cette source — c'est normal pour une application hors Play Store
+            3. L'icône apparaît dans le tiroir d'applications
+
+            L'application affiche <https://${{ vars.STABLE_DOMAIN }}> en plein écran.
+            Elle se met à jour toute seule : c'est le site qui porte le contenu,
+            l'APK n'est qu'une coquille. Inutile de le réinstaller à chaque évolution.
+
+            ### Sur iPhone
+
+            Aucun APK possible. Ouvre <https://${{ vars.STABLE_DOMAIN }}> dans Safari,
+            puis **Partager → Sur l'écran d'accueil**.
+
+      - name: Récapitulatif
+        run: |
+          {
+            echo "### 📱 APK publié"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Fichier | \`${{ steps.artifact.outputs.name }}\` |"
+            echo "| Taille | ${{ steps.artifact.outputs.size }} |"
+            echo "| Origine | https://${STABLE_DOMAIN} |"
+            echo "| Version | ${ANDROID_VERSION_NAME} (code ${ANDROID_VERSION_CODE}) |"
+            echo
+            echo "Si l'application affiche une barre d'adresse, c'est que la vérification"
+            echo "Digital Asset Links a échoué : lance \`npm run android:register\` puis"
+            echo "redéploie le site pour publier \`/.well-known/assetlinks.json\`."
+          } >> "$GITHUB_STEP_SUMMARY"
