@@ -65,6 +65,11 @@ jobs:
           HAS_SA: ${{ secrets.GCP_SERVICE_ACCOUNT != '' }}
           HAS_KEY: ${{ secrets.GCP_SA_KEY != '' }}
           HAS_WEATHER: ${{ secrets.OPENWEATHER_API_KEY != '' }}
+          # L'e-mail d'un compte de service contient son projet. Après une
+          # migration, oublier de remettre à jour ce secret produit un
+          # « HTTP 404 » sur generateAccessToken, illisible. On le compare donc
+          # à GCP_PROJECT_ID sans jamais afficher sa valeur.
+          SA_PROJECT_OK: ${{ secrets.GCP_SERVICE_ACCOUNT == '' || endsWith(secrets.GCP_SERVICE_ACCOUNT, format('@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID)) }}
         run: |
           fatal=0
           summary=""
@@ -100,6 +105,15 @@ jobs:
             note "| Authentification | ❌ absente | **bloquant** |"
             echo "::error::Aucun moyen de s'authentifier auprès de GCP."
             echo "::error::Lance « make bootstrap » puis configure GCP_WIF_PROVIDER + GCP_SERVICE_ACCOUNT."
+            fatal=1
+          fi
+
+          # -- Cohérence entre le compte de service et le projet ----------------
+          if [ "$HAS_SA" = "true" ] && [ "$SA_PROJECT_OK" != "true" ]; then
+            note "| Compte de service | ❌ autre projet | **bloquant** |"
+            echo "::error::Le secret GCP_SERVICE_ACCOUNT n'appartient pas au projet ${{ vars.GCP_PROJECT_ID }}."
+            echo "::error::Attendu : mtl-ci@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+            echo "::error::Pense aussi à GCP_WIF_PROVIDER, qui contient le NUMÉRO du projet."
             fatal=1
           fi
 
