@@ -19,6 +19,7 @@ n'ait à réinstaller quoi que ce soit.
 | Auth | Firebase Authentication | Google + e-mail/mot de passe, rôles portés par des *custom claims*. |
 | Hébergement | Firebase Hosting | CDN mondial, HTTPS automatique, domaine personnalisé gratuit, et **rewrite serveur vers Cloud Run**. |
 | Région | `europe-west1` (Belgique) | Les lecteurs réguliers du journal sont les proches restés en France. Le voyageur encaisse ~90 ms de latence depuis Montréal — sans effet perceptible, le cache Firestore local sert la lecture. Hosting reste servi par le CDN mondial. |
+| Stockage photos | `us-east1` | Seule exception à la règle ci-dessus. Firebase provisionne son bucket par défaut aux États-Unis, où le stockage est moins cher — et c'est le poste de coût dominant du projet. Les photos étant téléversées par le navigateur directement vers Storage, Cloud Run ne fait pas de trafic inter-région. Région immuable après création : la changer détruirait les photos (voir `media_bucket_location`). |
 
 ### Principe directeur : un backend qui peut disparaître
 

@@ -15,6 +15,22 @@ variable "allowed_origins" {
   default     = ["https://montreal.mondomaine.fr", "http://localhost:5173"]
 }
 
+variable "media_bucket_location" {
+  description = <<-EOT
+    Région du bucket photos, volontairement dissociée de var.region.
+
+    Firebase Storage provisionne son bucket par défaut aux États-Unis, et le
+    stockage y est sensiblement moins cher qu'en Europe. Choix assumé : les
+    photos restent en US-EAST1, tout le reste (Firestore, Cloud Run, Artifact
+    Registry) demeure en europe-west1, au plus près des lecteurs.
+
+    La région d'un bucket est immuable : la changer ici détruirait et
+    recréerait le bucket, donc les photos avec.
+  EOT
+  type        = string
+  default     = "us-east1"
+}
+
 variable "force_destroy_media" {
   description = "Autorise la suppression du bucket de photos même s'il n'est pas vide. Passé à vrai par le workflow de destruction, après confirmation."
   type        = bool

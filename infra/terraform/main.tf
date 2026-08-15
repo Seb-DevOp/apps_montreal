@@ -91,9 +91,13 @@ resource "google_firestore_database" "default" {
 # -----------------------------------------------------------------------------
 
 resource "google_storage_bucket" "media" {
-  name     = "${var.project_id}.firebasestorage.app"
-  project  = var.project_id
-  location = var.region
+  name    = "${var.project_id}.firebasestorage.app"
+  project = var.project_id
+
+  # Dissocié de var.region : voir variables.tf. Ce bucket est celui que
+  # Firebase Storage crée lui-même ; Terraform l'adopte (terraform import)
+  # plutôt que d'en provisionner un second.
+  location = var.media_bucket_location
 
   # Faux par défaut : Terraform refuse alors de détruire un bucket contenant
   # encore des photos. Le workflow « Infrastructure → destroy » le passe à vrai

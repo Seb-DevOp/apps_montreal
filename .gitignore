@@ -17,6 +17,7 @@ service-account*.json
 *.tfstate
 *.tfstate.*
 terraform.tfvars
+tfplan
 crash.log
 
 # Firebase / tooling
