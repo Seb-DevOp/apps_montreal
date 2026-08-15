@@ -305,10 +305,13 @@ ok "bundle construit"
 
 step "Déploiement Firebase Hosting, règles et index"
 
+# --force : autorise la suppression des index absents de firestore.indexes.json,
+# qui fait autorité. Sans lui, firebase-tools s'arrête en mode non interactif.
 firebase deploy \
   --only hosting,firestore:rules,firestore:indexes,storage \
   --project "$GCP_PROJECT_ID" \
-  --non-interactive
+  --non-interactive \
+  --force
 
 ok "PWA en ligne : https://${GCP_PROJECT_ID}.web.app"
 

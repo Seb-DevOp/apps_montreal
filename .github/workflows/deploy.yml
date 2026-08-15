@@ -402,10 +402,17 @@ jobs:
 
       - name: Déployer Hosting, règles et index
         run: |
+          # --force : en mode non interactif, c'est la seule façon de laisser
+          # firebase-tools supprimer les index absents de firestore.indexes.json.
+          # Ce fichier fait autorité — un index créé à la main hors du dépôt est
+          # considéré comme une dérive, et disparaîtra au déploiement suivant.
+          # Portée limitée : on ne déploie ni functions ni autre cible dont
+          # --force accélérerait une suppression destructrice.
           npx --yes firebase-tools@13 deploy \
             --only hosting,firestore:rules,firestore:indexes,storage \
             --project "$PROJECT_ID" \
-            --non-interactive
+            --non-interactive \
+            --force
 
       - name: Vérifier la configuration servie
         run: |
