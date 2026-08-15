@@ -9,7 +9,7 @@
 #
 # Factorisé en action composite parce que les secrets se passent ici en
 # `inputs` explicites — plus lisible que de dupliquer deux étapes
-# conditionnelles dans chacun des sept jobs.
+# conditionnelles dans chacun des jobs.
 # =============================================================================
 
 name: Authentification GCP
@@ -31,24 +31,40 @@ inputs:
     description: Clé de service JSON (repli, utilisée si wif_provider est vide)
     required: false
     default: ''
+  token_format:
+    description: >-
+      Mettre « access_token » pour exposer un jeton OAuth en sortie. Nécessaire
+      pour s'authentifier auprès d'Artifact Registry sans passer par le
+      credential helper de gcloud.
+    required: false
+    default: ''
+
+outputs:
+  access_token:
+    description: Jeton OAuth, non vide seulement si token_format vaut « access_token ».
+    value: ${{ steps.wif.outputs.access_token || steps.key.outputs.access_token }}
 
 runs:
   using: composite
   steps:
     - name: Workload Identity Federation
+      id: wif
       if: inputs.wif_provider != ''
       uses: google-github-actions/auth@v2
       with:
         project_id: ${{ inputs.project_id }}
         workload_identity_provider: ${{ inputs.wif_provider }}
         service_account: ${{ inputs.service_account }}
+        token_format: ${{ inputs.token_format }}
 
     - name: Clé de service
+      id: key
       if: inputs.wif_provider == ''
       uses: google-github-actions/auth@v2
       with:
         project_id: ${{ inputs.project_id }}
         credentials_json: ${{ inputs.sa_key }}
+        token_format: ${{ inputs.token_format }}
 
     - name: Vérifier l'identité obtenue
       shell: bash
