@@ -333,6 +333,31 @@ risque de dérive, et un like posé hors-ligne est rejoué à la reconnexion.
 dans une requête composée avec un tri : le doublon paye un index et évite un filtrage
 client sur tout le flux.
 
+### Index
+
+[`firestore.indexes.json`](firestore.indexes.json) ne déclare **qu'un seul index
+composite**, et c'est volontaire.
+
+Firestore crée et maintient seul les index à champ unique. Les déclarer explicitement
+n'est pas seulement inutile : le déploiement échoue avec
+`400 this index is not necessary, configure using single field index controls`. Sont donc
+automatiques, et absents du fichier :
+
+| Requête | Où |
+|---|---|
+| `posts` triés par `takenAt` | flux sans filtre de quartier |
+| `comments` triés par `createdAt` | fil d'un post |
+| `tasks` triées par `offsetDays` | timeline de préparation |
+| `spots` filtrés sur `indoor` | sélecteur d'activités |
+| `lexicon` trié par `term` | lexique |
+
+Reste un seul cas combinant un filtre d'égalité et un tri sur un **autre** champ —
+`usePosts({ neighborhood })` — qui exige donc un index composite.
+
+Rester minimal a un coût nul et deux bénéfices : chaque index ralentit les écritures et
+consomme du quota, et une requête future qui en réclamerait un échoue avec un lien de
+création directe. Il sera temps de l'ajouter à ce moment-là.
+
 ---
 
 ## 5. Sécurité

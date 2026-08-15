@@ -263,6 +263,30 @@ jobs:
           echo "ALLOWED_ORIGINS=${origins}" >> "$GITHUB_ENV"
           echo "Origines : ${origins}"
 
+      # Le secret GitHub et la version dans Secret Manager sont deux choses
+      # distinctes : c'est « Infrastructure → apply » qui publie la seconde à
+      # partir de la première. Monter « :latest » sur un secret sans version
+      # empêche la révision Cloud Run de démarrer — on vérifie donc avant.
+      - name: Vérifier la disponibilité du secret météo
+        id: weather
+        env:
+          HAS_WEATHER: ${{ secrets.OPENWEATHER_API_KEY != '' }}
+        run: |
+          mount=""
+          if [ "$HAS_WEATHER" = "true" ]; then
+            if gcloud secrets versions list openweather-api-key \
+                 --project="$PROJECT_ID" --limit=1 --format="value(name)" 2>/dev/null | grep -q .; then
+              mount="OPENWEATHER_API_KEY=openweather-api-key:latest"
+              echo "Clé météo disponible, elle sera montée sur le service."
+            else
+              echo "::warning::OPENWEATHER_API_KEY est défini dans GitHub, mais Secret Manager n'a encore aucune version."
+              echo "::warning::Lance « Infrastructure → apply » pour la publier, puis relance ce déploiement."
+            fi
+          else
+            echo "Aucune clé météo configurée : les écrans Météo et Activités resteront indisponibles."
+          fi
+          echo "mount=$mount" >> "$GITHUB_OUTPUT"
+
       - uses: docker/setup-buildx-action@v3
 
       - name: Construire et pousser l'image
@@ -299,10 +323,10 @@ jobs:
             APP_VERSION=${{ github.sha }}
             STORAGE_BUCKET=${{ env.PROJECT_ID }}.firebasestorage.app
             ALLOWED_ORIGINS=${{ env.ALLOWED_ORIGINS }}
-          # Le secret est monté seulement s'il existe : sinon Cloud Run refuse
-          # de démarrer la révision, et c'est tout le déploiement qui tombe
-          # pour une fonctionnalité secondaire.
-          secrets: ${{ secrets.OPENWEATHER_API_KEY != '' && 'OPENWEATHER_API_KEY=openweather-api-key:latest' || '' }}
+          # Vide tant que la clé n'a pas de version dans Secret Manager : sinon
+          # Cloud Run refuse de démarrer la révision, et tout le déploiement
+          # tombe pour une fonctionnalité secondaire.
+          secrets: ${{ steps.weather.outputs.mount }}
 
       - name: Sonde de santé
         run: |
