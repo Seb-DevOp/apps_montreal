@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// =============================================================================
+// Montréal Compagnon — règles Cloud Storage
+//
+// Arborescence du bucket :
+//   photos/{uid}/{postId}/full.jpg    image compressée (max 1600px, ~85 %)
+//   photos/{uid}/{postId}/thumb.jpg   vignette galerie (max 480px)
+//   avatars/{uid}.jpg                 avatar utilisateur
+//
+// Garde-fous quota Free Tier : taille max imposée par les règles, en plus de
+// la compression côté client (lib/image.ts).
+// =============================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return isSignedIn() && request.auth.token.role is string
+        ? request.auth.token.role
+        : (isSignedIn() ? 'guest' : 'anon');
+    }
+
+    function isAdmin() { return role() == 'admin'; }
+    function isGuest() { return isSignedIn() && role() != 'blocked'; }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    // 3 Mo : une photo compressée à 1600px/85 % pèse ~300-600 Ko. Le plafond
+    // protège le quota si la compression client est contournée.
+    function underSizeLimit(mb) {
+      return request.resource.size < mb * 1024 * 1024;
+    }
+
+    // ------------------------------ photos ---------------------------------
+    match /photos/{uid}/{postId}/{fileName} {
+      allow read: if isGuest();
+
+      allow write: if isAdmin()
+        && request.auth.uid == uid
+        && isImage()
+        && underSizeLimit(3)
+        && fileName.matches('(full|thumb)\\.(jpg|jpeg|png|webp)');
+
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------ avatars --------------------------------
+    match /avatars/{fileName} {
+      allow read: if isGuest();
+      allow write: if isSignedIn()
+        && fileName.matches(request.auth.uid + '\\.(jpg|jpeg|png|webp)')
+        && isImage()
+        && underSizeLimit(1);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

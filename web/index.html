@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover : indispensable pour que env(safe-area-inset-*)
+         renvoie autre chose que 0 sur les iPhone à encoche. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"
+    />
+    <meta name="theme-color" content="#0b1220" />
+    <meta name="description" content="Carnet de voyage et compagnon pratique pour Montréal." />
+
+    <!-- Contenu privé : jamais d'indexation. -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- iOS : mode plein écran depuis l'écran d'accueil. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Montréal" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- Préconnexions : le premier appel Firestore/Storage part plus vite. -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <title>Montréal Compagnon</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <p style="color: #e8eefc; font-family: system-ui; padding: 2rem">
+        Cette application a besoin de JavaScript pour fonctionner.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

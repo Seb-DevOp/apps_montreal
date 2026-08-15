@@ -1,0 +1,427 @@
+# =============================================================================
+# Déploiement de l'application — Montréal Compagnon
+#
+# Déploie le CODE sur une infrastructure déjà en place (voir infra.yml).
+# Séparation volontaire : on pousse du code plusieurs fois par semaine, on
+# touche à l'infrastructure une fois par trimestre. Les mélanger ferait courir
+# le risque d'un `terraform apply` sur un simple correctif de CSS.
+#
+# Configuration minimale requise : la variable GCP_PROJECT_ID et de quoi
+# s'authentifier. Tout le reste a un défaut sensé — le job « preflight » dit
+# exactement ce qui manque et ce que ça coûte.
+# =============================================================================
+
+name: Déploiement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'web/**'
+      - 'scripts/**'
+      - 'seed/**'
+      - 'firebase.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'storage.rules'
+      - '.github/workflows/deploy.yml'
+      - '.github/actions/**'
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: 'Réinjecter le contenu de référence (spots, lexique, check-list)'
+        type: boolean
+        default: false
+
+# Un seul déploiement à la fois : deux `run deploy` concurrents sur le même
+# service produisent des révisions dans un ordre imprévisible.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # requis par Workload Identity Federation
+
+env:
+  NODE_VERSION: '22'
+  DEFAULT_REGION: europe-west1
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 0. Preflight — diagnostiquer la configuration AVANT de tenter quoi que ce soit
+  # ---------------------------------------------------------------------------
+  preflight:
+    name: Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier variables et secrets
+        env:
+          # Les secrets ne peuvent pas être testés dans une expression `if:` de
+          # façon fiable : on les mappe en variables d'environnement, et on
+          # teste leur présence en bash. Aucune valeur n'est jamais affichée.
+          HAS_WIF: ${{ secrets.GCP_WIF_PROVIDER != '' }}
+          HAS_SA: ${{ secrets.GCP_SERVICE_ACCOUNT != '' }}
+          HAS_KEY: ${{ secrets.GCP_SA_KEY != '' }}
+          HAS_WEATHER: ${{ secrets.OPENWEATHER_API_KEY != '' }}
+        run: |
+          fatal=0
+          summary=""
+
+          note() { summary="${summary}$1"$'\n'; }
+
+          note "### Configuration du dépôt"
+          note ""
+          note "| Élément | État | Conséquence |"
+          note "|---|---|---|"
+
+          # -- Obligatoire : le projet ------------------------------------------
+          if [ -z "${{ vars.GCP_PROJECT_ID }}" ]; then
+            note "| \`GCP_PROJECT_ID\` (variable) | ❌ absent | **bloquant** |"
+            echo "::error::La variable GCP_PROJECT_ID est obligatoire."
+            fatal=1
+          else
+            note "| \`GCP_PROJECT_ID\` | ✅ \`${{ vars.GCP_PROJECT_ID }}\` | |"
+          fi
+
+          # -- Obligatoire : l'authentification ---------------------------------
+          if [ "$HAS_WIF" = "true" ] && [ "$HAS_SA" = "true" ]; then
+            note "| Authentification | ✅ Workload Identity | sans clé de longue durée |"
+          elif [ "$HAS_KEY" = "true" ]; then
+            note "| Authentification | ✅ clé de service | repli fonctionnel |"
+          elif [ "$HAS_SA" = "true" ]; then
+            note "| Authentification | ❌ incomplète | **bloquant** |"
+            echo "::error::GCP_SERVICE_ACCOUNT est renseigné, mais GCP_WIF_PROVIDER manque."
+            echo "::error::Seul, GCP_SERVICE_ACCOUNT ne sert à rien : il faut aussi le provider OIDC."
+            echo "::error::Lance « make bootstrap » en local, il affiche la valeur à coller."
+            fatal=1
+          else
+            note "| Authentification | ❌ absente | **bloquant** |"
+            echo "::error::Aucun moyen de s'authentifier auprès de GCP."
+            echo "::error::Lance « make bootstrap » puis configure GCP_WIF_PROVIDER + GCP_SERVICE_ACCOUNT."
+            fatal=1
+          fi
+
+          # -- Optionnels : défauts appliqués -----------------------------------
+          if [ -n "${{ vars.GCP_REGION }}" ]; then
+            note "| \`GCP_REGION\` | ✅ \`${{ vars.GCP_REGION }}\` | |"
+          else
+            note "| \`GCP_REGION\` | ⚙️ défaut | \`${{ env.DEFAULT_REGION }}\` |"
+          fi
+
+          if [ -n "${{ vars.CLOUD_RUN_SERVICE }}" ]; then
+            note "| \`CLOUD_RUN_SERVICE\` | ✅ \`${{ vars.CLOUD_RUN_SERVICE }}\` | |"
+          else
+            note "| \`CLOUD_RUN_SERVICE\` | ⚙️ défaut | \`mtl-api\` |"
+          fi
+
+          if [ -n "${{ vars.ADMIN_EMAIL }}" ]; then
+            note "| \`ADMIN_EMAIL\` | ✅ défini | |"
+          else
+            note "| \`ADMIN_EMAIL\` | ⚠️ absent | personne ne recevra le rôle admin |"
+            echo "::warning::ADMIN_EMAIL non défini : aucun compte ne pourra publier de photo."
+          fi
+
+          if [ -n "${{ vars.STABLE_DOMAIN }}" ]; then
+            note "| \`STABLE_DOMAIN\` | ✅ \`${{ vars.STABLE_DOMAIN }}\` | |"
+          else
+            note "| \`STABLE_DOMAIN\` | ⚠️ absent | migration non transparente |"
+            echo "::warning::Sans domaine stable, un changement de projet obligera à réinstaller la PWA."
+          fi
+
+          if [ -n "${{ vars.TRIP_DEPARTURE_DATE }}" ]; then
+            note "| Dates du voyage | ✅ ${{ vars.TRIP_DEPARTURE_DATE }} → ${{ vars.TRIP_RETURN_DATE }} | |"
+          else
+            note "| Dates du voyage | ⚙️ défaut | 2026-10-12 → 2026-10-26 |"
+          fi
+
+          if [ "$HAS_WEATHER" = "true" ]; then
+            note "| \`OPENWEATHER_API_KEY\` | ✅ défini | |"
+          else
+            note "| \`OPENWEATHER_API_KEY\` | ⚠️ absent | module météo indisponible |"
+            echo "::warning::Sans clé OpenWeather, les écrans Météo et Activités renverront une erreur."
+          fi
+
+          note ""
+          if [ "$fatal" -eq 1 ]; then
+            note "---"
+            note ""
+            note "**Déploiement interrompu.** Lance \`make bootstrap\` en local :"
+            note "il crée le projet et le service account, puis affiche les"
+            note "variables et secrets à coller (avec les commandes \`gh\` prêtes)."
+          fi
+
+          echo "$summary" >> "$GITHUB_STEP_SUMMARY"
+          exit "$fatal"
+
+  # ---------------------------------------------------------------------------
+  # 1. Vérifications — échouent vite, avant toute dépense côté GCP
+  # ---------------------------------------------------------------------------
+  checks:
+    name: Vérifications
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            api/package-lock.json
+            web/package-lock.json
+
+      - name: Installer les dépendances
+        run: |
+          npm ci --prefix api
+          npm ci --prefix web
+
+      - name: Typecheck API
+        run: npm run typecheck --prefix api
+
+      - name: Typecheck PWA
+        run: npm run typecheck --prefix web
+
+      - name: Build PWA (valide aussi la génération du Service Worker)
+        run: |
+          node scripts/generate-icons.mjs
+          npm run build --prefix web
+
+  # ---------------------------------------------------------------------------
+  # 2. API → Cloud Run
+  # ---------------------------------------------------------------------------
+  api:
+    name: API sur Cloud Run
+    needs: checks
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
+      SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'mtl-api' }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gcp-auth
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          sa_key: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Préparer Artifact Registry
+        run: |
+          # Filet de sécurité si le dépôt d'images n'a pas encore été créé par
+          # Terraform (premier déploiement, ou apply lancé après le push).
+          gcloud artifacts repositories create mtl \
+            --repository-format=docker \
+            --location="$REGION" \
+            --project="$PROJECT_ID" 2>/dev/null || true
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Calculer les origines autorisées
+        run: |
+          # Sans domaine stable, la liste ne doit pas contenir « https:// » nu :
+          # le contrôle CORS de l'API rejetterait alors des origines valides.
+          origins="https://${PROJECT_ID}.web.app,https://${PROJECT_ID}.firebaseapp.com"
+          if [ -n "${{ vars.STABLE_DOMAIN }}" ]; then
+            origins="https://${{ vars.STABLE_DOMAIN }},${origins}"
+          fi
+          echo "ALLOWED_ORIGINS=${origins}" >> "$GITHUB_ENV"
+          echo "Origines : ${origins}"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construire et pousser l'image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api
+          push: true
+          tags: |
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/mtl/api:${{ github.sha }}
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/mtl/api:latest
+          # Cache porté par GitHub : évite de réinstaller node_modules à chaque
+          # commit, ~2 min gagnées par build.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Déployer sur Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/mtl/api:${{ github.sha }}
+          flags: >-
+            --allow-unauthenticated
+            --port=8080
+            --memory=512Mi
+            --cpu=1
+            --min-instances=0
+            --max-instances=3
+            --timeout=60
+            --concurrency=80
+          env_vars: |-
+            NODE_ENV=production
+            APP_VERSION=${{ github.sha }}
+            STORAGE_BUCKET=${{ env.PROJECT_ID }}.firebasestorage.app
+            ALLOWED_ORIGINS=${{ env.ALLOWED_ORIGINS }}
+          # Le secret est monté seulement s'il existe : sinon Cloud Run refuse
+          # de démarrer la révision, et c'est tout le déploiement qui tombe
+          # pour une fonctionnalité secondaire.
+          secrets: ${{ secrets.OPENWEATHER_API_KEY != '' && 'OPENWEATHER_API_KEY=openweather-api-key:latest' || '' }}
+
+      - name: Sonde de santé
+        run: |
+          # Scale-to-zero : la première requête réveille l'instance et peut
+          # prendre plusieurs secondes. On réessaie avant de conclure à l'échec.
+          for attempt in 1 2 3 4 5; do
+            if curl -fsS --max-time 30 "${{ steps.deploy.outputs.url }}/api/health"; then
+              echo && echo "API opérationnelle."
+              exit 0
+            fi
+            echo "Tentative $attempt sans réponse, nouvel essai dans 10 s."
+            sleep 10
+          done
+          echo "::error::L'API ne répond pas après le déploiement."
+          exit 1
+
+  # ---------------------------------------------------------------------------
+  # 3. PWA → Firebase Hosting (+ règles et index)
+  # ---------------------------------------------------------------------------
+  web:
+    name: PWA sur Firebase Hosting
+    needs: api
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
+      SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'mtl-api' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: ./.github/actions/gcp-auth
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          sa_key: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Aligner firebase.json sur le service Cloud Run
+        run: |
+          # Le rewrite /api/** doit pointer sur le bon service et la bonne
+          # région : c'est lui qui masque l'URL *.run.app à la PWA.
+          node --input-type=module -e "
+            import { readFileSync, writeFileSync } from 'node:fs';
+            const config = JSON.parse(readFileSync('firebase.json', 'utf8'));
+            config.hosting.rewrites[0].run = {
+              serviceId: process.env.SERVICE,
+              region: process.env.REGION,
+            };
+            writeFileSync('firebase.json', JSON.stringify(config, null, 2) + '\n');
+          "
+
+      - name: Générer config.json
+        env:
+          GCP_PROJECT_ID: ${{ env.PROJECT_ID }}
+          DEPLOY_VERSION: ${{ github.sha }}
+          TRIP_DEPARTURE_DATE: ${{ vars.TRIP_DEPARTURE_DATE }}
+          TRIP_RETURN_DATE: ${{ vars.TRIP_RETURN_DATE }}
+        run: node scripts/generate-config.mjs
+
+      - name: Construire la PWA
+        run: |
+          node scripts/generate-icons.mjs
+          npm ci --prefix web
+          npm run build --prefix web
+
+      - name: Déployer Hosting, règles et index
+        run: |
+          npx --yes firebase-tools@13 deploy \
+            --only hosting,firestore:rules,firestore:indexes,storage \
+            --project "$PROJECT_ID" \
+            --non-interactive
+
+      - name: Vérifier la configuration servie
+        run: |
+          # Contrôle décisif pour la migration : le config.json en ligne doit
+          # porter le projet courant. S'il était périmé, les PWA installées
+          # continueraient de parler à l'ancienne infrastructure.
+          served=$(curl -fsS "https://${PROJECT_ID}.web.app/config.json")
+          echo "$served"
+          echo "$served" | grep -q "\"projectId\": \"${PROJECT_ID}\"" \
+            || { echo "::error::config.json ne pointe pas sur ${PROJECT_ID}"; exit 1; }
+
+  # ---------------------------------------------------------------------------
+  # 4. Contenu de référence et rôle admin
+  # ---------------------------------------------------------------------------
+  content:
+    name: Contenu et rôles
+    needs: [api, web]
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: ./.github/actions/gcp-auth
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          sa_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Installer firebase-admin
+        run: npm install --no-save firebase-admin@12
+
+      - name: Injecter le contenu de référence
+        # Idempotent (écritures en merge), mais inutile à chaque commit : on ne
+        # le lance qu'à la demande, ou via « [seed] » dans le message de commit.
+        if: ${{ inputs.seed || contains(github.event.head_commit.message, '[seed]') }}
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.PROJECT_ID }}
+          TRIP_DEPARTURE_DATE: ${{ vars.TRIP_DEPARTURE_DATE }}
+          TRIP_RETURN_DATE: ${{ vars.TRIP_RETURN_DATE }}
+        run: node scripts/seed-firestore.mjs
+
+      - name: Attribuer le rôle admin
+        # Échoue tant que le compte ne s'est jamais connecté : ce n'est pas une
+        # erreur de déploiement, le prochain run corrigera.
+        if: ${{ vars.ADMIN_EMAIL != '' }}
+        continue-on-error: true
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.PROJECT_ID }}
+        run: node scripts/set-admin.mjs "${{ vars.ADMIN_EMAIL }}"
+
+      - name: Récapitulatif
+        run: |
+          {
+            echo "### 🍁 Déploiement terminé"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Application | https://${PROJECT_ID}.web.app |"
+            if [ -n "${{ vars.STABLE_DOMAIN }}" ]; then
+              echo "| Domaine stable | https://${{ vars.STABLE_DOMAIN }} |"
+            fi
+            echo "| API | ${{ needs.api.outputs.url }} |"
+            echo "| Région | ${{ vars.GCP_REGION || 'europe-west1' }} |"
+            echo "| Version | \`${{ github.sha }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

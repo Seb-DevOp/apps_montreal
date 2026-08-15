@@ -1,0 +1,57 @@
+# =============================================================================
+# Authentification GCP — deux chemins, une seule interface.
+#
+# Par défaut : Workload Identity Federation (OIDC). Aucun secret de longue
+# durée dans GitHub, et le jeton est restreint à ce dépôt par une condition
+# d'attribut posée à la création du provider (voir scripts/bootstrap-ci.sh).
+#
+# Repli : clé de service JSON, si l'organisation GitHub n'expose pas OIDC.
+#
+# Factorisé en action composite parce que les secrets se passent ici en
+# `inputs` explicites — plus lisible que de dupliquer deux étapes
+# conditionnelles dans chacun des sept jobs.
+# =============================================================================
+
+name: Authentification GCP
+description: Authentifie le runner auprès de Google Cloud (WIF ou clé de service)
+
+inputs:
+  project_id:
+    description: Identifiant du projet GCP
+    required: true
+  wif_provider:
+    description: Chemin complet du provider Workload Identity. Prioritaire s'il est fourni.
+    required: false
+    default: ''
+  service_account:
+    description: Compte de service à emprunter (requis avec wif_provider)
+    required: false
+    default: ''
+  sa_key:
+    description: Clé de service JSON (repli, utilisée si wif_provider est vide)
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Workload Identity Federation
+      if: inputs.wif_provider != ''
+      uses: google-github-actions/auth@v2
+      with:
+        project_id: ${{ inputs.project_id }}
+        workload_identity_provider: ${{ inputs.wif_provider }}
+        service_account: ${{ inputs.service_account }}
+
+    - name: Clé de service
+      if: inputs.wif_provider == ''
+      uses: google-github-actions/auth@v2
+      with:
+        project_id: ${{ inputs.project_id }}
+        credentials_json: ${{ inputs.sa_key }}
+
+    - name: Vérifier l'identité obtenue
+      shell: bash
+      run: |
+        echo "Identité active : $(gcloud config get-value account 2>/dev/null || echo inconnue)"
+        echo "Projet          : ${{ inputs.project_id }}"

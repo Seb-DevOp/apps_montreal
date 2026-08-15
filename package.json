@@ -1,0 +1,31 @@
+{
+  "name": "montreal-compagnon",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PWA de préparation et carnet de voyage pour Montréal, sur le Free Tier GCP",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "//": "Équivalents portables des cibles du Makefile — `make` n'existe pas sur Windows.",
+    "//env": "--env-file-if-exists charge .env : sur Windows, `VAR=x commande` n'existe pas.",
+    "bootstrap": "node scripts/run-sh.mjs scripts/bootstrap-ci.sh",
+    "bootstrap:sa-key": "node scripts/run-sh.mjs scripts/bootstrap-ci.sh --sa-key",
+    "deploy": "node scripts/run-sh.mjs deploy.sh",
+    "deploy:app": "node scripts/run-sh.mjs deploy.sh --app-only",
+    "migrate": "node scripts/run-sh.mjs deploy.sh --migrate",
+    "dns:show": "node --env-file-if-exists=.env scripts/duckdns-update.mjs show",
+    "dns:setup": "node --env-file-if-exists=.env scripts/duckdns-update.mjs setup",
+    "dns:verify": "node --env-file-if-exists=.env scripts/duckdns-update.mjs verify",
+    "install:all": "npm --prefix api install && npm --prefix web install",
+    "icons": "node scripts/generate-icons.mjs",
+    "config": "node --env-file-if-exists=.env scripts/generate-config.mjs",
+    "seed": "node --env-file-if-exists=.env scripts/seed-firestore.mjs",
+    "admin": "node --env-file-if-exists=.env scripts/set-admin.mjs",
+    "dev:api": "npm --prefix api run dev",
+    "dev:web": "npm --prefix web run dev",
+    "emulators": "npx --yes firebase-tools@13 emulators:start --only auth,firestore,storage",
+    "typecheck": "npm --prefix api run typecheck && npm --prefix web run typecheck",
+    "build": "node scripts/generate-icons.mjs && npm --prefix api run build && npm --prefix web run build",
+    "rules": "npx --yes firebase-tools@13 deploy --only firestore:rules,storage"
+  }
+}

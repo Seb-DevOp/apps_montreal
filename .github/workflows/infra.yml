@@ -1,0 +1,293 @@
+# =============================================================================
+# Infrastructure — Montréal Compagnon
+#
+# Création et destruction à la demande. Jamais déclenché par un push : on ne
+# touche à l'infrastructure que délibérément.
+#
+#   plan     aperçu des changements, ne modifie rien
+#   apply    crée / met à jour les ressources
+#   destroy  détruit les ressources, GARDE le projet GCP
+#   nuke     supprime le projet GCP entier (le vrai « repartir de zéro »)
+#
+# `destroy` et `nuke` exigent de retaper l'identifiant du projet dans le champ
+# « confirm ». Un workflow destructeur déclenchable en deux clics est un
+# accident qui attend son heure.
+# =============================================================================
+
+name: Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Opération à effectuer'
+        type: choice
+        required: true
+        default: plan
+        options: [plan, apply, destroy, nuke]
+      confirm:
+        description: 'Pour destroy / nuke : retape l’identifiant exact du projet GCP'
+        type: string
+        required: false
+        default: ''
+      keep_photos:
+        description: 'destroy : conserver le bucket de photos (échouera s’il n’est pas vide)'
+        type: boolean
+        default: false
+
+# Jamais deux opérations d'infrastructure en parallèle : l'état Terraform ne
+# le supporterait pas (et le verrou GCS ferait échouer la seconde de toute façon).
+concurrency:
+  group: infra
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_DIR: infra/terraform
+  TF_VERSION: '1.9.8'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Garde-fou : valide la confirmation AVANT de toucher à quoi que ce soit
+  # ---------------------------------------------------------------------------
+  guard:
+    name: Contrôle de sécurité
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier la configuration
+        env:
+          HAS_WIF: ${{ secrets.GCP_WIF_PROVIDER != '' }}
+          HAS_SA: ${{ secrets.GCP_SERVICE_ACCOUNT != '' }}
+          HAS_KEY: ${{ secrets.GCP_SA_KEY != '' }}
+        run: |
+          if [ -z "${{ vars.GCP_PROJECT_ID }}" ]; then
+            echo "::error::La variable de dépôt GCP_PROJECT_ID n'est pas définie."
+            exit 1
+          fi
+
+          # Même piège que dans le workflow de déploiement : GCP_SERVICE_ACCOUNT
+          # seul ne permet pas de s'authentifier, il lui faut le provider OIDC.
+          if [ "$HAS_WIF" = "true" ] && [ "$HAS_SA" = "true" ]; then
+            echo "Authentification : Workload Identity Federation."
+          elif [ "$HAS_KEY" = "true" ]; then
+            echo "Authentification : clé de service."
+          else
+            echo "::error::Authentification GCP incomplète."
+            echo "::error::Il faut GCP_WIF_PROVIDER + GCP_SERVICE_ACCOUNT, ou GCP_SA_KEY."
+            echo "::error::« make bootstrap » en local affiche les valeurs à coller."
+            exit 1
+          fi
+
+          echo "Bucket d'état : ${{ vars.TF_STATE_BUCKET || format('{0}-tfstate', vars.GCP_PROJECT_ID) }}"
+          echo "Région        : ${{ vars.GCP_REGION || 'europe-west1' }}"
+
+      - name: Vérifier la confirmation
+        run: |
+          action="${{ inputs.action }}"
+          confirm="${{ inputs.confirm }}"
+          project="${{ vars.GCP_PROJECT_ID }}"
+
+          case "$action" in
+            plan|apply)
+              echo "Opération non destructive : « $action » sur $project."
+              ;;
+            destroy|nuke)
+              if [ "$confirm" != "$project" ]; then
+                echo "::error::Confirmation absente ou incorrecte."
+                echo "Pour « $action », le champ « confirm » doit valoir exactement : $project"
+                exit 1
+              fi
+              echo "::warning::Opération DESTRUCTRICE « $action » confirmée sur $project."
+              ;;
+          esac
+
+  # ---------------------------------------------------------------------------
+  # Terraform : plan / apply / destroy
+  # ---------------------------------------------------------------------------
+  terraform:
+    name: Terraform ${{ inputs.action }}
+    needs: guard
+    if: ${{ inputs.action != 'nuke' }}
+    runs-on: ubuntu-latest
+    # Environnement GitHub distinct pour les opérations destructrices. Il est
+    # créé automatiquement au premier run ; y ajouter un « required reviewer »
+    # impose alors une approbation manuelle avant tout destroy.
+    environment: ${{ (inputs.action == 'destroy') && 'production-destroy' || 'production' }}
+    defaults:
+      run:
+        working-directory: infra/terraform
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
+      # Le bucket suit toujours la convention posée par bootstrap-ci.sh :
+      # inutile d'imposer une variable de plus.
+      STATE_BUCKET: ${{ vars.TF_STATE_BUCKET || format('{0}-tfstate', vars.GCP_PROJECT_ID) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gcp-auth
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          sa_key: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Préparer les variables Terraform
+        env:
+          STABLE_DOMAIN: ${{ vars.STABLE_DOMAIN }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        run: |
+          # Construit ici plutôt qu'en interpolation directe : sans domaine
+          # stable, on obtiendrait une origine « https:// » nue dans la
+          # configuration CORS du bucket.
+          origins="\"https://${PROJECT_ID}.web.app\",\"http://localhost:5173\""
+          if [ -n "$STABLE_DOMAIN" ]; then
+            origins="\"https://${STABLE_DOMAIN}\",${origins}"
+          fi
+
+          {
+            echo "TF_VAR_project_id=${PROJECT_ID}"
+            echo "TF_VAR_region=${REGION}"
+            echo "TF_VAR_allowed_origins=[${origins}]"
+            echo "TF_VAR_openweather_api_key=${OPENWEATHER_API_KEY}"
+          } >> "$GITHUB_ENV"
+
+          echo "Origines CORS : [${origins}]"
+
+      - name: Initialiser (état dans GCS)
+        run: |
+          # Backend en configuration partielle : le bucket change à chaque
+          # migration trimestrielle, il n'a donc rien à faire en dur dans le code.
+          terraform init -input=false \
+            -backend-config="bucket=${STATE_BUCKET}" \
+            -backend-config="prefix=montreal-compagnon"
+
+      - name: Valider la configuration
+        run: |
+          terraform fmt -check -recursive
+          terraform validate
+
+      - name: Plan
+        if: ${{ inputs.action == 'plan' || inputs.action == 'apply' }}
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Résumé du plan
+        if: ${{ inputs.action == 'plan' }}
+        run: |
+          {
+            echo "### Plan Terraform — ${PROJECT_ID}"
+            echo
+            echo '```'
+            terraform show -no-color tfplan | head -200
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Apply
+        if: ${{ inputs.action == 'apply' }}
+        run: |
+          # Une activation d'API met parfois quelques dizaines de secondes à se
+          # propager : la ressource qui en dépend échoue alors au premier essai.
+          # Un second passage suffit, plutôt que d'attendre à l'aveugle.
+          terraform apply -input=false -auto-approve tfplan || {
+            echo "::warning::Premier apply en échec (propagation d'API ?), nouvel essai dans 45 s."
+            sleep 45
+            terraform apply -input=false -auto-approve
+          }
+
+      - name: Destroy
+        if: ${{ inputs.action == 'destroy' }}
+        env:
+          SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'mtl-api' }}
+          # Sans force_destroy, Terraform refuse de supprimer un bucket qui
+          # contient encore des photos — garde-fou volontaire, levé seulement
+          # sur demande explicite.
+          TF_VAR_force_destroy_media: ${{ inputs.keep_photos && 'false' || 'true' }}
+        run: |
+          # Cloud Run n'est pas géré par Terraform (le service est déployé par
+          # le workflow applicatif) : on le retire ici pour ne pas laisser de
+          # révision orpheline derrière nous.
+          gcloud run services delete "$SERVICE" \
+            --region="$REGION" \
+            --project="$PROJECT_ID" \
+            --quiet 2>/dev/null || echo "Aucun service Cloud Run à supprimer."
+
+          terraform destroy -input=false -auto-approve
+
+      - name: Récapitulatif
+        if: ${{ always() && inputs.action != 'plan' }}
+        run: |
+          {
+            echo "### Infrastructure — ${{ inputs.action }}"
+            echo
+            echo "Projet : \`${PROJECT_ID}\` · région \`${REGION}\`"
+            echo
+            if [ "${{ inputs.action }}" = "apply" ]; then
+              echo "Prochaine étape : lancer le workflow **Déploiement** pour livrer le code."
+            else
+              echo "Ressources détruites. Le projet GCP et le bucket d'état Terraform existent toujours."
+              echo "Pour tout supprimer, relance ce workflow avec l'action \`nuke\`."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # Nuke : suppression du projet GCP entier
+  # ---------------------------------------------------------------------------
+  nuke:
+    name: Suppression du projet GCP
+    needs: guard
+    if: ${{ inputs.action == 'nuke' }}
+    runs-on: ubuntu-latest
+    environment: production-destroy
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/gcp-auth
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          sa_key: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Inventaire avant suppression
+        run: |
+          # Trace de ce qui disparaît : utile si la question se pose plus tard.
+          echo "Projet : $PROJECT_ID"
+          gcloud storage du -s "gs://${PROJECT_ID}.firebasestorage.app" 2>/dev/null \
+            || echo "Bucket média : absent"
+          gcloud run services list --project="$PROJECT_ID" 2>/dev/null || true
+
+      - name: Supprimer le projet
+        run: |
+          gcloud projects delete "$PROJECT_ID" --quiet
+          echo "Projet marqué pour suppression."
+
+      - name: Récapitulatif
+        run: |
+          {
+            echo "### 💥 Projet supprimé"
+            echo
+            echo "\`${{ vars.GCP_PROJECT_ID }}\` est marqué pour suppression."
+            echo
+            echo "Google conserve le projet **30 jours** avant l'effacement définitif :"
+            echo "\`gcloud projects undelete ${{ vars.GCP_PROJECT_ID }}\` le restaure d'ici là."
+            echo
+            echo "#### Pour repartir sur un nouveau projet"
+            echo
+            echo "1. Mets à jour \`GCP_PROJECT_ID\` dans \`.env\` **et** dans les variables du dépôt"
+            echo "2. Lance \`./scripts/bootstrap-ci.sh\` en local (création du projet et du service account)"
+            echo "3. Mets à jour les secrets \`GCP_WIF_PROVIDER\` et \`GCP_SERVICE_ACCOUNT\`"
+            echo "4. Workflow **Infrastructure** → \`apply\`"
+            echo "5. Workflow **Déploiement**"
+            echo "6. Repointe le DNS du domaine stable — les PWA installées suivront seules"
+          } >> "$GITHUB_STEP_SUMMARY"

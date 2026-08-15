@@ -1,0 +1,38 @@
+node_modules/
+dist/
+build/
+.output/
+coverage/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*-service-account.json
+service-account*.json
+.firebaserc
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+crash.log
+
+# Firebase / tooling
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Build artefacts PWA
+web/dev-dist/
+web/public/config.json

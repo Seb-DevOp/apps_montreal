@@ -1,0 +1,29 @@
+variable "project_id" {
+  description = "Identifiant du projet GCP. Change à chaque migration trimestrielle."
+  type        = string
+}
+
+variable "region" {
+  description = "Région de toutes les ressources. europe-west1 (Belgique) : proche des lecteurs restés en France, et éligible au Free Tier."
+  type        = string
+  default     = "europe-west1"
+}
+
+variable "allowed_origins" {
+  description = "Origines autorisées en CORS sur le bucket média."
+  type        = list(string)
+  default     = ["https://montreal.mondomaine.fr", "http://localhost:5173"]
+}
+
+variable "force_destroy_media" {
+  description = "Autorise la suppression du bucket de photos même s'il n'est pas vide. Passé à vrai par le workflow de destruction, après confirmation."
+  type        = bool
+  default     = false
+}
+
+variable "openweather_api_key" {
+  description = "Clé OpenWeatherMap. Laisser vide pour créer le secret sans version."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
