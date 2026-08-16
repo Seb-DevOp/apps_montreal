@@ -181,14 +181,30 @@ const CAD = new Intl.NumberFormat('fr-CA', {
 export const formatCad = (value: number): string => CAD.format(value);
 
 /**
- * Repères de rémunération DevOps à Montréal, en dollars canadiens bruts
- * annuels. Ordres de grandeur : le marché montréalais est nettement sous
- * Toronto, et le coût de la vie aussi.
+ * Repères de rémunération à Montréal, en dollars canadiens bruts annuels.
+ *
+ * L'échelle part de l'infrastructure cloud et monte vers le DevOps, parce que
+ * c'est le trajet réel : on ne devient pas « DevOps intermédiaire » d'un coup,
+ * on ajoute progressivement de l'automatisation et du CI/CD à un socle
+ * d'infrastructure. Les intitulés québécois brouillent d'ailleurs les cartes —
+ * « Cloud Engineer », « Infrastructure Engineer » et « DevOps » recouvrent
+ * souvent les mêmes tâches, à intitulé et salaire près.
+ *
+ * Ordres de grandeur : Montréal paie sensiblement sous Toronto, pour un coût
+ * de la vie lui aussi plus bas.
  */
-export const DEVOPS_BENCHMARKS: { level: string; range: [number, number] }[] = [
-  { level: 'DevOps junior (0-2 ans)', range: [65_000, 80_000] },
-  { level: 'DevOps intermédiaire (3-5 ans)', range: [85_000, 105_000] },
-  { level: 'DevOps senior (6+ ans)', range: [105_000, 130_000] },
-  { level: 'SRE / Platform lead', range: [125_000, 155_000] },
-  { level: 'Architecte cloud', range: [140_000, 175_000] },
+export const SALARY_BENCHMARKS: { level: string; range: [number, number]; note?: string }[] = [
+  { level: 'Admin. systèmes / infra', range: [60_000, 78_000] },
+  {
+    level: 'Infra cloud (AWS/Azure/GCP)',
+    range: [80_000, 100_000],
+    note: 'Le socle : ton positionnement actuel le plus probable.',
+  },
+  {
+    level: 'Cloud engineer avec part DevOps',
+    range: [90_000, 112_000],
+    note: 'IaC, CI/CD, conteneurs. La cible réaliste d’une transition.',
+  },
+  { level: 'DevOps / SRE confirmé', range: [105_000, 135_000] },
+  { level: 'Platform lead / architecte cloud', range: [130_000, 170_000] },
 ];

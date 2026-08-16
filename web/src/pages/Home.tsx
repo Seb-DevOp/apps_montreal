@@ -12,7 +12,7 @@ import { getConfig } from '../lib/runtimeConfig';
 import { useAuth } from '../contexts/AuthContext';
 
 const SHORTCUTS = [
-  { to: '/installation', icon: '🧭', label: 'Installation', hint: 'NAS, RAMQ, permis' },
+  { to: '/installation', icon: '🧭', label: 'Installation', hint: 'Avant / après le départ' },
   { to: '/embauche', icon: '💼', label: 'Embauche', hint: 'Candidatures & entretiens' },
   { to: '/logement', icon: '🏠', label: 'Logement', hint: 'Visites & loyers' },
   { to: '/salaire', icon: '🧮', label: 'Salaire net', hint: 'Brut → net mensuel' },

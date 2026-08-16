@@ -14,7 +14,6 @@ import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { More } from './pages/More';
 import { TaxCalculator } from './features/taxes/TaxCalculator';
-import { Checklist } from './features/checklist/Checklist';
 import { Spots } from './features/spots/Spots';
 import { Weather } from './features/weather/Weather';
 import { Lexicon } from './features/lexicon/Lexicon';
@@ -64,7 +63,8 @@ export function App(): JSX.Element {
         <Route path="taxes" element={<TaxCalculator />} />
         <Route path="spots" element={<Spots />} />
         <Route path="plus" element={<More />} />
-        <Route path="checklist" element={<Checklist />} />
+        {/* Fusionné dans /installation, qui couvre avant ET après. */}
+        <Route path="checklist" element={<Navigate to="/installation" replace />} />
         <Route path="meteo" element={<Weather />} />
         <Route path="lexique" element={<Lexicon />} />
         <Route path="horloge" element={<DualClock />} />

@@ -29,12 +29,11 @@ const TITLES: Record<string, string> = {
   '/taxes': 'Taxes & pourboires',
   '/spots': 'Micro-spots',
   '/plus': 'Plus',
-  '/checklist': 'Check & Sync',
   '/meteo': 'Météo ressentie',
   '/lexique': 'Argot québécois',
   '/horloge': 'Double horloge',
   '/embauche': 'Embauche',
-  '/installation': 'Installation',
+  '/installation': 'Parcours',
   '/salaire': 'Salaire net',
   '/logement': 'Logement',
 };

@@ -8,7 +8,7 @@
  */
 import { useMemo, useState } from 'react';
 import {
-  DEVOPS_BENCHMARKS,
+  SALARY_BENCHMARKS,
   TAX_YEAR,
   computePayroll,
   formatCad,
@@ -164,17 +164,22 @@ export function SalaryCalculator(): JSX.Element {
       {/* Repères de marché */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
         <h3 className="mb-2 text-xs uppercase tracking-wider text-frost/50">
-          Repères DevOps à Montréal
+          Repères infra cloud & DevOps à Montréal
         </h3>
         <ul className="space-y-1.5">
-          {DEVOPS_BENCHMARKS.map((benchmark) => (
+          {SALARY_BENCHMARKS.map((benchmark) => (
             <li key={benchmark.level}>
               <button
                 type="button"
                 onClick={() => setGross(String(Math.round((benchmark.range[0] + benchmark.range[1]) / 2)))}
                 className="flex w-full items-baseline justify-between rounded-xl bg-black/20 px-3 py-2 text-left"
               >
-                <span className="text-sm text-frost/70">{benchmark.level}</span>
+                <span className="min-w-0 flex-1 pr-2 text-left text-sm text-frost/70">
+                  {benchmark.level}
+                  {benchmark.note && (
+                    <span className="mt-0.5 block text-[10px] leading-snug text-frost/35">{benchmark.note}</span>
+                  )}
+                </span>
                 <span className="font-mono text-xs text-frost/50">
                   {(benchmark.range[0] / 1000).toFixed(0)}–{(benchmark.range[1] / 1000).toFixed(0)} k
                 </span>
@@ -183,8 +188,8 @@ export function SalaryCalculator(): JSX.Element {
           ))}
         </ul>
         <p className="mt-2 text-[11px] text-frost/35">
-          Bruts annuels indicatifs. Montréal paie sensiblement moins que Toronto, pour un coût de la
-          vie lui aussi plus bas.
+          Bruts annuels indicatifs. Les intitulés se recouvrent largement : « Cloud Engineer » et
+          « DevOps » désignent souvent le même poste, à quelques milliers près.
         </p>
       </div>
 

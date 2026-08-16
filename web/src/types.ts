@@ -61,6 +61,12 @@ export interface JobApplication {
   nextActionAt: string | null;
   nextAction: string;
   salaryRange: string;
+  /**
+   * Part estimée de DevOps dans le poste, en pourcentage. Critère de
+   * sélection à part entière : un poste d infra cloud avec 40 % de DevOps et
+   * une bonne paye vaut mieux qu un intitulé DevOps sans le contenu.
+   */
+  devopsShare: number;
   contactName: string;
   contactEmail: string;
   notes: string;

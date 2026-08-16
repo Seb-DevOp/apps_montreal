@@ -102,6 +102,29 @@ async function main() {
     createdAt: FieldValue.serverTimestamp(),
   }));
 
+  // Élagage des tâches de référence retirées du seed.
+  //
+  // Les documents issus du seed portent un identifiant préfixé (`pre-`,
+  // `inst-`) ; ceux ajoutés depuis l'application ont un identifiant
+  // auto-généré. Le préfixe permet donc de supprimer ce qui a disparu du
+  // référentiel sans jamais toucher aux tâches saisies à la main.
+  const seededIds = new Set([
+    ...readSeed('tasks').map((t) => t.id),
+    ...readSeed('settling').map((t) => t.id),
+  ]);
+
+  const existing = await db.collection('tasks').get();
+  const stale = existing.docs.filter(
+    (doc) => /^(pre|inst)-/.test(doc.id) && !seededIds.has(doc.id),
+  );
+
+  if (stale.length > 0) {
+    const pruning = db.batch();
+    stale.forEach((doc) => pruning.delete(doc.ref));
+    await pruning.commit();
+    console.log(`✓ tasks : ${stale.length} tâches obsolètes retirées`);
+  }
+
   // Les tâches nouvellement créées ont besoin d'un `done` explicite : on le
   // pose en une passe séparée, seulement là où le champ manque.
   const missing = await db.collection('tasks').get();

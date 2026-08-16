@@ -142,6 +142,7 @@ export function useApplicationActions() {
       nextActionAt: draft.nextActionAt ?? null,
       nextAction: draft.nextAction ?? '',
       salaryRange: draft.salaryRange ?? '',
+      devopsShare: draft.devopsShare ?? 40,
       contactName: draft.contactName ?? '',
       contactEmail: draft.contactEmail ?? '',
       notes: draft.notes ?? '',

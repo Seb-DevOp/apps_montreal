@@ -207,6 +207,29 @@ function ApplicationDetail({ application }: { application: EnrichedApplication }
             </div>
           </div>
 
+          <div>
+            <div className="flex items-baseline justify-between">
+              <label className="text-xs uppercase tracking-wider text-frost/50">
+                Part de DevOps dans le poste
+              </label>
+              <span className="font-mono text-sm text-frost">{application.devopsShare ?? 0} %</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={10}
+              value={application.devopsShare ?? 0}
+              onChange={(e) => patch({ devopsShare: Number(e.target.value) })}
+              className="mt-2 w-full accent-[#0a7cff]"
+            />
+            <p className="mt-1 text-[11px] leading-relaxed text-frost/40">
+              Ton critère : un poste d’infra cloud avec une vraie part d’automatisation et une paye
+              correcte vaut mieux qu’un intitulé DevOps sans le contenu. À estimer d’après l’offre,
+              puis à corriger après l’entretien.
+            </p>
+          </div>
+
           <details className="rounded-xl bg-black/20 p-3">
             <summary className="cursor-pointer text-xs text-frost/50">Repères de salaire à Montréal</summary>
             <ul className="mt-2 space-y-1 text-xs text-frost/60">
@@ -440,6 +463,17 @@ export function Applications(): JSX.Element {
                     {application.source}
                   </span>
                 )}
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[11px] ${
+                    application.devopsShare >= 60
+                      ? 'bg-mint/20 text-mint'
+                      : application.devopsShare >= 30
+                        ? 'bg-stm/20 text-stm'
+                        : 'bg-white/10 text-frost/40'
+                  }`}
+                >
+                  {application.devopsShare ?? 0} % DevOps
+                </span>
                 {application.salaryRange && (
                   <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-frost/50">
                     {application.salaryRange} $
