@@ -393,7 +393,21 @@ jobs:
           DEPLOY_VERSION: ${{ github.sha }}
           TRIP_DEPARTURE_DATE: ${{ vars.TRIP_DEPARTURE_DATE }}
           TRIP_RETURN_DATE: ${{ vars.TRIP_RETURN_DATE }}
+          # Omettre cette variable produit un config.json sans propriétaire.
+          # Le contrôle client s'en accommode désormais, mais l'application
+          # perd alors son message « mauvais compte ».
+          OWNER_EMAIL: ${{ vars.OWNER_EMAIL || vars.ADMIN_EMAIL }}
         run: node scripts/generate-config.mjs
+
+      - name: Vérifier que le propriétaire est bien présent
+        run: |
+          owner=$(node -e "console.log(require('./web/public/config.json').ownerEmail || '')")
+          if [ -z "$owner" ]; then
+            echo "::warning::config.json ne porte aucun ownerEmail."
+            echo "::warning::Définis la variable de dépôt OWNER_EMAIL (ou ADMIN_EMAIL)."
+          else
+            echo "Propriétaire déclaré dans config.json : présent."
+          fi
 
       - name: Construire la PWA
         run: |

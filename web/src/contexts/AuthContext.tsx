@@ -74,9 +74,23 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
         return;
       }
 
-      const owner = getConfig().ownerEmail.trim().toLowerCase();
+      const owner = (getConfig().ownerEmail ?? '').trim().toLowerCase();
       const email = (user.email ?? '').trim().toLowerCase();
-      const authorized = owner.length > 0 && email === owner && user.emailVerified;
+
+      // Une configuration sans propriétaire ne doit PAS verrouiller l'accès.
+      // Ce contrôle n'est qu'un confort d'affichage — il sert à dire « mauvais
+      // compte » plutôt que de laisser des écrans vides. La véritable garde est
+      // dans firestore.rules, qui n'accorde rien à personne d'autre.
+      // Échouer fermé ici transformerait un oubli de configuration en
+      // impossibilité de se connecter, sans qu'aucune sécurité y gagne.
+      const authorized = owner.length === 0 ? true : email === owner && user.emailVerified;
+
+      if (owner.length === 0) {
+        console.warn(
+          "[auth] ownerEmail absent de config.json : contrôle client désactivé, " +
+            'les règles Firestore restent seules en vigueur.',
+        );
+      }
 
       setState({
         user,
