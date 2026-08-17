@@ -57,3 +57,53 @@ export async function requireOwner(request: FastifyRequest, reply: FastifyReply)
 
   request.user = { uid: decoded.uid, email };
 }
+
+/**
+ * Autorise le propriétaire OU le planificateur Cloud Scheduler.
+ *
+ * Cloud Scheduler présente un jeton OIDC signé par Google, dont l'audience est
+ * l'URL du service. On le vérifie auprès de Google plutôt que d'employer un
+ * secret partagé : rien à stocker, rien à faire tourner, et le jeton expire de
+ * lui-même.
+ */
+export async function requireOwnerOrScheduler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const token = extractToken(request);
+  if (!token) {
+    return reply.code(401).send({ error: 'unauthenticated', message: 'Connexion requise.' });
+  }
+
+  // Chemin 1 : jeton Firebase du propriétaire (appel depuis l'application).
+  try {
+    const decoded = await auth.verifyIdToken(token);
+    const email = (decoded.email ?? '').toLowerCase();
+    if (email && email === config.ownerEmail.toLowerCase() && decoded.email_verified === true) {
+      request.user = { uid: decoded.uid, email };
+      return;
+    }
+  } catch {
+    // Pas un jeton Firebase : on tente le second chemin.
+  }
+
+  // Chemin 2 : jeton OIDC de Cloud Scheduler.
+  try {
+    const { OAuth2Client } = await import('google-auth-library');
+    const client = new OAuth2Client();
+    const ticket = await client.verifyIdToken({ idToken: token });
+    const payload = ticket.getPayload();
+
+    const serviceAccount = payload?.email ?? '';
+    const expected = config.schedulerServiceAccount.toLowerCase();
+
+    if (expected && serviceAccount.toLowerCase() === expected && payload?.email_verified) {
+      request.user = { uid: 'scheduler', email: serviceAccount };
+      return;
+    }
+  } catch {
+    // Jeton illisible ou signature invalide.
+  }
+
+  return reply.code(403).send({ error: 'forbidden', message: 'Appelant non autorisé.' });
+}

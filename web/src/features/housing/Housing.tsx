@@ -22,6 +22,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { NEIGHBORHOODS } from '../../data/neighborhoods';
+import { api } from '../../lib/api';
 
 type Verdict = 'a-visiter' | 'visite' | 'candidature' | 'refuse' | 'ecarte';
 
@@ -39,6 +40,10 @@ interface Listing {
   verdict: Verdict;
   availableAt: string;
   notes: string;
+  /** État du dernier contrôle automatique de l'annonce. */
+  linkStatus?: 'live' | 'gone' | 'suspect' | 'blocked' | 'unknown';
+  linkReason?: string;
+  linkCheckedAt?: { toDate: () => Date };
 }
 
 const VERDICT_LABEL: Record<Verdict, string> = {
@@ -55,6 +60,22 @@ const VERDICT_STYLE: Record<Verdict, string> = {
   candidature: 'bg-amber/20 text-amber',
   refuse: 'bg-maple/20 text-maple',
   ecarte: 'bg-white/5 text-frost/30',
+};
+
+/**
+ * Trois états de lien, jamais deux.
+ *
+ * « Non vérifiable » ne signifie PAS « disparue » : les sites d'annonces
+ * refusent couramment les requêtes venant d'un datacenter, et prendre ce refus
+ * pour un retrait ferait écarter des logements encore libres. Seul un retrait
+ * constaté deux fois de suite passe en rouge.
+ */
+const LINK_STATUS: Record<string, { label: string; style: string; border: string }> = {
+  live: { label: 'En ligne', style: 'bg-mint/20 text-mint', border: 'border-white/10' },
+  suspect: { label: 'Peut-être retirée', style: 'bg-amber/20 text-amber', border: 'border-amber/40' },
+  gone: { label: 'Disparue', style: 'bg-maple/25 text-maple', border: 'border-maple/50' },
+  blocked: { label: 'Non vérifiable', style: 'bg-white/10 text-frost/40', border: 'border-white/10' },
+  unknown: { label: 'Jamais vérifiée', style: 'bg-white/10 text-frost/40', border: 'border-white/10' },
 };
 
 const inputClass =
@@ -132,6 +153,34 @@ export function Housing(): JSX.Element {
   }, [listings, petsOnly]);
 
   const petsUnknown = listings.filter((l) => l.petsAllowed === null).length;
+  const goneCount = listings.filter((l) => l.linkStatus === 'gone').length;
+
+  const [checking, setChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<string | null>(null);
+
+  const checkNow = useCallback(async () => {
+    setChecking(true);
+    setCheckResult(null);
+    try {
+      const r = await api.post<{
+        checked: number;
+        live: number;
+        gone: number;
+        suspect: number;
+        blocked: number;
+      }>('/housing/check');
+
+      setCheckResult(
+        r.checked === 0
+          ? 'Aucune annonce à vérifier.'
+          : `${r.checked} vérifiées · ${r.live} en ligne · ${r.gone} disparues · ${r.suspect} douteuses · ${r.blocked} non vérifiables`,
+      );
+    } catch (error) {
+      setCheckResult(error instanceof Error ? error.message : 'Vérification impossible.');
+    } finally {
+      setChecking(false);
+    }
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -150,6 +199,34 @@ export function Housing(): JSX.Element {
           <strong className="text-frost">Le 1<sup>er</sup> juillet</strong> est la date de
           déménagement traditionnelle : l’essentiel des baux y démarre, et le marché s’y concentre.
         </p>
+      </div>
+
+      {/* Surveillance automatique des annonces */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm text-frost">🔗 Surveillance des annonces</p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-frost/50">
+              Contrôle automatique deux fois par jour. Une annonce ne passe en rouge qu’après{' '}
+              <strong className="text-frost/70">deux constats successifs</strong> : un blocage
+              passager ne doit pas te faire renoncer à un logement encore libre.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void checkNow()}
+            disabled={checking}
+            className="shrink-0 rounded-full bg-white/10 px-3 py-1.5 text-xs text-frost/70 disabled:opacity-40"
+          >
+            {checking ? 'En cours…' : 'Vérifier'}
+          </button>
+        </div>
+        {goneCount > 0 && (
+          <p className="mt-2 text-xs text-maple">
+            {goneCount} annonce{goneCount > 1 ? 's' : ''} disparue{goneCount > 1 ? 's' : ''} — à écarter.
+          </p>
+        )}
+        {checkResult && <p className="mt-2 text-xs text-frost/50">{checkResult}</p>}
       </div>
 
       {/* Alerte animaux */}
@@ -245,7 +322,12 @@ export function Housing(): JSX.Element {
 
       <ul className="space-y-2">
         {visible.map((listing) => (
-          <li key={listing.id} className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+          <li
+            key={listing.id}
+            className={`overflow-hidden rounded-2xl border bg-white/5 ${
+              LINK_STATUS[listing.linkStatus ?? 'unknown']?.border ?? 'border-white/10'
+            }`}
+          >
             <button
               type="button"
               onClick={() => setExpanded(expanded === listing.id ? null : listing.id)}
@@ -268,6 +350,14 @@ export function Housing(): JSX.Element {
                   <span className="rounded-full bg-white/10 px-2.5 py-1 text-frost/70">
                     {listing.rent} $/mois
                     {listing.heatedIncluded ? ' · chauffé' : ''}
+                  </span>
+                )}
+                {listing.url && listing.linkStatus && listing.linkStatus !== 'live' && (
+                  <span
+                    className={`rounded-full px-2.5 py-1 ${LINK_STATUS[listing.linkStatus]?.style ?? ''}`}
+                    title={listing.linkReason ?? ''}
+                  >
+                    🔗 {LINK_STATUS[listing.linkStatus]?.label}
                   </span>
                 )}
                 <span

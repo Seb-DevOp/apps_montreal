@@ -160,6 +160,50 @@ resource "google_artifact_registry_repository" "mtl" {
 }
 
 # -----------------------------------------------------------------------------
+# Surveillance des annonces de logement
+#
+# Cloud Scheduler appelle l'API deux fois par jour pour vérifier si les
+# annonces suivies répondent encore. Il présente un jeton OIDC signé par
+# Google, que l'API valide (voir api/src/middleware/auth.ts) : aucun secret
+# partagé à stocker ni à faire tourner.
+# -----------------------------------------------------------------------------
+
+resource "google_service_account" "scheduler" {
+  project      = var.project_id
+  account_id   = "mtl-scheduler"
+  display_name = "Cloud Scheduler — vérification des annonces"
+
+  depends_on = [google_project_service.enabled]
+}
+
+resource "google_cloud_scheduler_job" "housing_check" {
+  count = var.api_base_url == "" ? 0 : 1
+
+  project  = var.project_id
+  region   = var.region
+  name     = "mtl-housing-check"
+  schedule = "0 7,19 * * *"
+  # 7 h et 19 h heure de Montréal : le matin pour les annonces publiées la
+  # veille au soir, le soir pour celles de la journée.
+  time_zone        = "America/Montreal"
+  attempt_deadline = "540s"
+
+  retry_config {
+    retry_count = 2
+  }
+
+  http_target {
+    http_method = "POST"
+    uri         = "${var.api_base_url}/api/housing/check"
+
+    oidc_token {
+      service_account_email = google_service_account.scheduler.email
+      audience              = var.api_base_url
+    }
+  }
+}
+
+# -----------------------------------------------------------------------------
 # Secrets
 # -----------------------------------------------------------------------------
 

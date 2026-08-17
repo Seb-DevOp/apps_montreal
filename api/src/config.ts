@@ -35,6 +35,9 @@ export const config = {
   /** Seule adresse autorisée. Miroir de ownerEmail() dans firestore.rules. */
   ownerEmail: optional('OWNER_EMAIL', ''),
 
+  /** Compte de service de Cloud Scheduler, autorisé à lancer les vérifications. */
+  schedulerServiceAccount: optional('SCHEDULER_SERVICE_ACCOUNT', ''),
+
   /** Clé OpenWeatherMap (montée depuis Secret Manager). */
   openWeatherKey: optional('OPENWEATHER_API_KEY', ''),
 

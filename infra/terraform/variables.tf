@@ -15,6 +15,18 @@ variable "allowed_origins" {
   default     = ["https://montreal.mondomaine.fr", "http://localhost:5173"]
 }
 
+variable "api_base_url" {
+  description = <<-EOT
+    URL du service Cloud Run, utilisée par Cloud Scheduler pour appeler l'API.
+
+    Vide tant que le service n'existe pas : la tâche planifiée n'est alors pas
+    créée, plutôt que de pointer dans le vide. À renseigner après le premier
+    déploiement de l'API.
+  EOT
+  type        = string
+  default     = ""
+}
+
 variable "media_bucket_location" {
   description = <<-EOT
     Région du bucket photos, volontairement dissociée de var.region.

@@ -19,6 +19,7 @@ import { config } from './config.js';
 import { healthRoutes } from './routes/health.js';
 import { weatherRoutes } from './routes/weather.js';
 import { taskRoutes } from './routes/tasks.js';
+import { housingRoutes } from './routes/housing.js';
 
 const app = Fastify({
   logger: {
@@ -61,6 +62,7 @@ await app.register(rateLimit, {
 await app.register(healthRoutes);
 await app.register(weatherRoutes);
 await app.register(taskRoutes);
+await app.register(housingRoutes);
 
 app.setErrorHandler((error, request, reply) => {
   request.log.error({ err: error }, 'erreur non gérée');
